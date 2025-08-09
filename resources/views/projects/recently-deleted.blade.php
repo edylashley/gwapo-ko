@@ -7,10 +7,22 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
+<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
     @include('components.navigation')
 
     <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -148,7 +160,8 @@
     </style>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto mt-24">
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
+    <div class="max-w-7xl mx-auto">
         <!-- Info Banner -->
         <div class="glass-card card-delay-1 p-6 mb-8">
             <div class="flex items-center space-x-4">
@@ -160,7 +173,7 @@
             </div>
         </div>
 
-    <div class="container mx-auto mt-20">
+    <div class="container mx-auto">
         <!-- Page Header -->
         <div class="glass-card card-delay-1 p-6 mb-8">
             <div>
@@ -580,6 +593,7 @@
             }
         }
     </script>
-    </div>
+    </div> <!-- Close container -->
+    </div> <!-- Close main content -->
 </body>
 </html>

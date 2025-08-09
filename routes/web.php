@@ -194,3 +194,4 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('system-settings', [SystemSettingsController::class, 'update'])->name('system-settings.update');
     Route::post('system-settings/clear-cache', [SystemSettingsController::class, 'clearCache'])->name('system-settings.clear-cache');
 });
+

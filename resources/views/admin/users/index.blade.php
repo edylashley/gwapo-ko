@@ -5,13 +5,26 @@
     <title>User Management - Budget Control</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
+<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'User Management'])
 
     <!-- Main Content -->
-    <div class="pt-20">
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
         <div class="max-w-7xl mx-auto">
             
             <!-- Header Section -->
@@ -311,5 +324,7 @@ tbody tr:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 </style>
+        </div> <!-- Close max-w-7xl -->
+    </div> <!-- Close main content -->
 </body>
 </html>

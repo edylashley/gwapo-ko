@@ -7,12 +7,28 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
-    
+<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen transition-all duration-300">
+
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Analytics Dashboard'])
 
+    <!-- Main Content -->
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;"
+         id="mainContent">
+
     <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -123,7 +139,7 @@
     </style>
 
     <!-- Project Engineer Management Section -->
-    <div class="max-w-7xl mx-auto mt-20 mb-6">
+    <div class="max-w-7xl mx-auto mb-6">
         <!-- Engineer Statistics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <!-- Total Engineers -->
@@ -266,10 +282,6 @@
                     <input type="email" id="engineerEmail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Specialization</label>
-                    <input type="text" id="engineerSpecialization" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" placeholder="You may proceed without filling this in.">
-                </div>
-                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Roles</label>
                     <div class="space-y-2">
                         <label class="flex items-center">
@@ -298,6 +310,52 @@
         // Pass admin status to JavaScript
         const isUserAdmin = @json(auth()->user()->is_admin);
 
+        // Simple Modal Management System for Dashboard
+        const ModalManager = {
+            modalStack: [],
+
+            openModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    if (!this.modalStack.includes(modalId)) {
+                        this.modalStack.push(modalId);
+                    }
+                }
+            },
+
+            closeModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                    const index = this.modalStack.indexOf(modalId);
+                    if (index > -1) {
+                        this.modalStack.splice(index, 1);
+                    }
+                }
+            },
+
+            closeTopModal: function() {
+                if (this.modalStack.length > 0) {
+                    const topModalId = this.modalStack[this.modalStack.length - 1];
+                    this.closeModal(topModalId);
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        // ESC key handler for modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const closed = ModalManager.closeTopModal();
+                if (closed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        });
+
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
@@ -313,15 +371,30 @@
         function setupEventListeners() {
             // Add Engineer Modal
             document.getElementById('addEngineerBtn').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.remove('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.openModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.remove('hidden');
+                }
             });
 
             document.getElementById('closeAddEngineerModal').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.add('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.closeModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.add('hidden');
+                }
             });
 
             document.getElementById('cancelAddEngineer').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.add('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.closeModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.add('hidden');
+                }
             });
 
             // Add Engineer Form
@@ -445,7 +518,6 @@
         function addEngineer() {
             const name = document.getElementById('engineerName').value;
             const email = document.getElementById('engineerEmail').value;
-            const specialization = document.getElementById('engineerSpecialization').value;
             const canBeProjectEngineer = document.getElementById('canBeProjectEngineer').checked;
             const canBeMonthlyEngineer = document.getElementById('canBeMonthlyEngineer').checked;
 
@@ -461,7 +533,6 @@
                 body: JSON.stringify({
                     name: name,
                     email: email,
-                    specialization: specialization,
                     can_be_project_engineer: canBeProjectEngineer,
                     can_be_monthly_engineer: canBeMonthlyEngineer
                 })
@@ -470,7 +541,11 @@
             .then(data => {
                 if (data.success) {
                     // Close modal and reset form
-                    document.getElementById('addEngineerModal').classList.add('hidden');
+                    if (typeof ModalManager !== 'undefined') {
+                        ModalManager.closeModal('addEngineerModal');
+                    } else {
+                        document.getElementById('addEngineerModal').classList.add('hidden');
+                    }
                     document.getElementById('addEngineerForm').reset();
 
                     // Refresh all dashboard data
@@ -702,5 +777,7 @@
             loadEngineers();
         }
     </script>
+
+    </div> <!-- Close main content div -->
 </body>
 </html>

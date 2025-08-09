@@ -1,216 +1,226 @@
-<!-- Enhanced Navigation Component -->
-<nav class="w-full flex items-center justify-between px-8 py-3 fixed top-0 left-0 z-50 border-b border-white/30 backdrop-blur-sm" style="background: linear-gradient(90deg, #064e3b 0%, #065f46 50%, #10b981 100%);">
-    <!-- Logo/Brand -->
-    <div class="flex items-center">
+<!-- Enhanced Sidebar Navigation Component -->
+<!-- Sidebar -->
+<div id="sidebar" class="fixed left-0 top-0 h-full w-64 z-50 transform transition-transform duration-300 ease-in-out flex flex-col" style="background: linear-gradient(180deg, #064e3b 0%, #065f46 50%, #10b981 100%);">
+    <!-- Logo/Brand Section -->
+    <div class="p-4 border-b border-white/20">
         <div class="flex items-center space-x-3">
-            <a href="/dashboard" class="hover:scale-105 transition-all duration-200">
-                @include('components.logo', ['size' => 'md', 'background' => true])
+            <a href="/dashboard" class="hover:scale-105 transition-all duration-200 flex-shrink-0">
+                @include('components.logo', ['size' => 'sm', 'background' => true])
             </a>
-            <div>
-                <a href="/dashboard" class="text-xl font-extrabold text-white drop-shadow tracking-wide hover:text-green-100 transition-colors duration-200">Budget Control</a>
-                <p class="text-xs text-green-100 opacity-80">{{ $pageTitle ?? 'Project Management' }}</p>
+            <div class="flex-1 min-w-0">
+                <a href="/dashboard" class="text-lg font-extrabold text-white drop-shadow tracking-wide hover:text-green-100 transition-colors duration-200 block truncate">Budget Control</a>
+                <p class="text-xs text-green-100 opacity-80 truncate">{{ $pageTitle ?? 'Project Management' }}</p>
             </div>
         </div>
     </div>
 
-    <!-- Desktop Navigation -->
-    <div class="hidden md:flex items-center space-x-6">
-        <!-- Main Navigation Links -->
-        <a href="/dashboard" class="nav-item {{ request()->is('dashboard') ? 'active' : '' }}">
-            Dashboard
-        </a>
-
-        <a href="/projects" class="nav-item {{ request()->is('projects*') && !request()->is('projects/archive') && !request()->is('projects/recently-deleted') ? 'active' : '' }}">
-            Projects
-        </a>    
-
-        <a href="/monthly-assignments" class="nav-item {{ request()->is('monthly-assignments*') ? 'active' : '' }}">
-            Teams
-        </a>
-
-
-
-        <a href="/projects/archive" class="nav-item {{ request()->is('projects/archive') ? 'active' : '' }}">
-            Archive
-        </a>
-
-        @if(auth()->user()->is_admin)
-            <a href="/projects/recently-deleted" class="nav-item {{ request()->is('projects/recently-deleted') ? 'active' : '' }}">
-                Recently Deleted
-            </a>
-        @endif
-
-        <!-- User Menu -->
-        <div class="relative ml-4 flex-shrink-0 h-10" style="min-width: fit-content;">
-            <button id="accountDropdownBtn" class="nav-item dropdown-toggle flex items-center min-w-0 h-10">
-                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-2 flex-shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </div>
-                <span class="hidden sm:inline">Account</span>
-                <svg id="accountDropdownArrow" class="w-4 h-4 ml-1 transition-transform duration-300 ease-in-out flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+    <!-- Navigation Links -->
+    <div class="flex-1 px-6 py-4 overflow-y-auto">
+        <nav class="space-y-3">
+            <!-- Main Navigation Links -->
+            <a href="/dashboard" class="sidebar-nav-item {{ request()->is('dashboard') ? 'active' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
                 </svg>
-            </button>
-            <div id="accountDropdownMenu" class="dropdown-menu hidden" style="width: 280px !important; border-radius: 16px !important; background: white !important;">
-                <!-- Header Section -->
-                <div class="px-4 py-3 bg-green-300 border-b border-gray-200">
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-3">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                        </div>
-                        <div class="flex-1">
-                            <div class="font-semibold text-gray-900 text-sm">
-                                {{ auth()->user()->is_admin ? 'Admin User' : auth()->user()->name }}
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                {{ auth()->user()->is_admin ? 'Administrator' : 'User' }}
-                            </div>
-                        </div>
-                    </div>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/projects" class="sidebar-nav-item {{ request()->is('projects*') && !request()->is('projects/archive') && !request()->is('projects/recently-deleted') ? 'active' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <span>Projects</span>
+            </a>
+
+            <a href="/monthly-assignments" class="sidebar-nav-item {{ request()->is('monthly-assignments*') ? 'active' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                <span>Teams</span>
+            </a>
+
+            <a href="/projects/archive" class="sidebar-nav-item {{ request()->is('projects/archive') ? 'active' : '' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 8l6 6 6-6"></path>
+                </svg>
+                <span>Archive</span>
+            </a>
+
+            @if(auth()->user()->is_admin)
+                <a href="/projects/recently-deleted" class="sidebar-nav-item {{ request()->is('projects/recently-deleted') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span>Recently Deleted</span>
+                </a>
+            @endif
+        </nav>
+    </div>
+
+    <!-- User Account Section -->
+    <div class="border-t border-white/20 p-6 mt-auto">
+        <!-- User Info -->
+        <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white font-semibold text-base mr-4">
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+            </div>
+            <div class="flex-1">
+                <div class="font-semibold text-white text-sm">
+                    {{ auth()->user()->is_admin ? 'Admin User' : auth()->user()->name }}
                 </div>
-
-
-
-                <!-- Personal Account Actions (All Users) -->
-                <div class="py-2 bg-white">
-                    <a href="#" class="dropdown-item py-3 px-4 hover:bg-gray-50 transition-colors duration-200" onclick="showMyProfile()">
-                        <svg class="w-4 h-4 mr-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-medium text-gray-700">My Profile</span>
-                    </a>
-                    <a href="#" class="dropdown-item py-3 px-4 hover:bg-gray-50 transition-colors duration-200" onclick="showChangePassword()">
-                        <svg class="w-4 h-4 mr-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-2a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-medium text-gray-700">Change Password</span>
-                    </a>
-                </div>
-
-                <!-- Admin Actions (Admin Only) -->
-                @if(auth()->user()->is_admin)
-                <div class="border-t border-gray-200"></div>
-                <div class="py-2 bg-white">
-                    <a href="{{ route('users.index') }}" class="dropdown-item py-3 px-4 hover:bg-blue-50 transition-colors duration-200" onclick="closeAccountDropdown()">
-                        <svg class="w-4 h-4 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                        </svg>
-                        <span class="font-medium text-blue-700">User Management</span>
-                    </a>
-                    <a href="#" class="dropdown-item py-3 px-4 hover:bg-blue-50 transition-colors duration-200" onclick="showSystemSettings()">
-                        <svg class="w-4 h-4 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-medium text-blue-700">System Settings</span>
-                    </a>
-                </div>
-                @endif
-
-                <!-- Sign Out -->
-                <div class="border-t border-gray-200 bg-white">
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <button type="submit" class="dropdown-item w-full text-left py-3 px-4 hover:bg-red-50 transition-colors duration-200 border-none bg-transparent">
-                            <svg class="w-4 h-4 mr-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="font-medium text-red-700">Sign Out</span>
-                        </button>
-                    </form>
+                <div class="text-xs text-green-100 opacity-80">
+                    {{ auth()->user()->is_admin ? 'Administrator' : 'User' }}
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Mobile Menu Button -->
-    <div class="md:hidden">
-        <button id="mobileMenuBtn" class="nav-item">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
-    </div>
-</nav>
+        <!-- Account Actions -->
+        <div class="space-y-2">
+            <a href="#" class="sidebar-nav-item text-sm" onclick="showMyProfile()">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>My Profile</span>
+            </a>
 
-<!-- Mobile Menu -->
-<div id="mobileMenu" class="fixed inset-0 z-40 hidden md:hidden">
-    <div class="fixed inset-0 bg-black bg-opacity-50" onclick="closeMobileMenu()"></div>
-    <div class="fixed top-0 right-0 w-80 h-full bg-white shadow-xl transform translate-x-full transition-transform duration-300" id="mobileMenuPanel">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-gray-800">Menu</h2>
-                <button onclick="closeMobileMenu()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <a href="#" class="sidebar-nav-item text-sm" onclick="showChangePassword()">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                </svg>
+                <span>Change Password</span>
+            </a>
+
+            @if(auth()->user()->is_admin)
+                <a href="{{ route('users.index') }}" class="sidebar-nav-item text-sm">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                     </svg>
+                    <span>User Management</span>
+                </a>
+
+                <a href="{{ route('system-settings.index') }}" class="sidebar-nav-item text-sm">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>System Settings</span>
+                </a>
+            @endif
+
+            <form method="POST" action="{{ route('logout') }}" class="w-full">
+                @csrf
+                <button type="submit" class="sidebar-nav-item text-sm w-full text-left">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span>Sign Out</span>
                 </button>
-            </div>
-            
-            <div class="space-y-2">
-                <a href="/dashboard" class="mobile-nav-item {{ request()->is('dashboard') ? 'bg-green-100' : '' }}">
-                    Dashboard
-                </a>
-
-                <a href="/projects" class="mobile-nav-item {{ request()->is('projects*') && !request()->is('projects/archive') && !request()->is('projects/recently-deleted') ? 'bg-green-100' : '' }}">
-                    Projects
-                </a>
-
-                <a href="/monthly-assignments" class="mobile-nav-item {{ request()->is('monthly-assignments*') ? 'bg-green-100' : '' }}">
-                    Teams
-                </a>
-
-                <a href="/projects/archive" class="mobile-nav-item {{ request()->is('projects/archive') ? 'bg-green-100' : '' }}">
-                    Archive
-                </a>
-
-                @if(auth()->user()->is_admin)
-                    <a href="/projects/recently-deleted" class="mobile-nav-item {{ request()->is('projects/recently-deleted') ? 'bg-green-100' : '' }}">
-                        Recently Deleted
-                    </a>
-                @endif
-
-                <div class="border-t pt-4 mt-6">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="mobile-nav-item w-full text-left">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
+<!-- Mobile Menu Button -->
+<button id="mobileMenuBtn" class="fixed top-4 left-4 z-50 md:hidden bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 text-white">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+</button>
+
+<!-- Sidebar Toggle Button for Desktop -->
+<button id="sidebarToggle" class="fixed top-4 left-4 z-50 hidden md:block bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-2 text-white">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+</button>
+
+
+
+<!-- Sidebar Overlay for Mobile -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+<!-- Main Content Wrapper -->
+<div id="mainContent" class="transition-all duration-300 ease-in-out ml-0 md:ml-64">
+    <!-- This will be filled by the page content -->
+</div>
+
 <style>
-/* Simple Navigation Styles */
-.nav-item {
-    @apply flex items-center px-4 py-2 rounded-lg text-white font-medium transition-all duration-200;
-}
-
-.nav-item:hover {
-    @apply bg-white bg-opacity-20;
-}
-
-.nav-item.active {
-    @apply bg-white bg-opacity-25;
-}
-
-.dropdown-toggle {
-    @apply cursor-pointer;
-    min-width: fit-content;
-    flex-shrink: 0;
-}
-
-/* Simple Navigation Layout */
-nav {
-    position: fixed !important;
-    width: 100% !important;
-}
-
-.nav-item {
+/* Sidebar Navigation Styles */
+.sidebar-nav-item {
+    @apply flex items-center justify-start px-4 py-4 text-white font-medium transition-all duration-200 w-full;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     white-space: nowrap;
+    min-height: 48px;
+    line-height: 1.2;
+    margin: 0 -24px;
+    padding-left: 28px;
+    padding-right: 28px;
+    border-radius: 0;
+}
+
+.sidebar-nav-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(0);
+    border-left: 4px solid rgba(255, 255, 255, 0.8);
+    padding-left: 24px;
+}
+
+/* Ensure perfect vertical centering */
+.sidebar-nav-item * {
+    vertical-align: middle;
+}
+
+.sidebar-nav-item.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-left: 4px solid white;
+    padding-left: 24px;
+}
+
+/* Ensure icons stay beside text */
+.sidebar-nav-item svg {
     flex-shrink: 0;
+    min-width: 20px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-nav-item span {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    line-height: 1.2;
+}
+
+/* Sidebar Layout */
+#sidebar {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile sidebar hidden by default */
+@media (max-width: 768px) {
+    #sidebar {
+        transform: translateX(-100%);
+    }
+
+    #sidebar.open {
+        transform: translateX(0);
+    }
+}
+
+/* Main content adjustment */
+body {
+    @apply transition-all duration-300;
+}
+
+/* Ensure content doesn't overlap sidebar */
+.main-content {
+    @apply transition-all duration-300;
 }
 
 /* Remove duplicate rule - using the main .dropdown-menu rule below */
@@ -302,72 +312,95 @@ nav {
 </style>
 
 <script>
-// Mobile menu functionality
-function openMobileMenu() {
-    document.getElementById('mobileMenu').classList.remove('hidden');
-    setTimeout(() => {
-        document.getElementById('mobileMenuPanel').classList.remove('translate-x-full');
-    }, 10);
-}
+// Sidebar functionality
+let sidebarOpen = true;
 
-function closeMobileMenu() {
-    document.getElementById('mobileMenuPanel').classList.add('translate-x-full');
-    setTimeout(() => {
-        document.getElementById('mobileMenu').classList.add('hidden');
-    }, 300);
-}
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const isMobile = window.innerWidth < 768;
 
-document.getElementById('mobileMenuBtn').addEventListener('click', openMobileMenu);
-
-// Account dropdown functionality
-const accountDropdownBtn = document.getElementById('accountDropdownBtn');
-const accountDropdownMenu = document.getElementById('accountDropdownMenu');
-const accountDropdownArrow = document.getElementById('accountDropdownArrow');
-
-function toggleAccountDropdown() {
-    const isHidden = accountDropdownMenu.classList.contains('hidden');
-
-    if (isHidden) {
-        accountDropdownMenu.classList.remove('hidden');
-        accountDropdownMenu.classList.add('show');
-        accountDropdownArrow.style.transform = 'rotate(180deg)';
+    if (isMobile) {
+        // Mobile behavior
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            overlay.classList.add('hidden');
+        } else {
+            sidebar.classList.add('open');
+            overlay.classList.remove('hidden');
+        }
     } else {
-        accountDropdownMenu.classList.remove('show');
-        accountDropdownMenu.classList.add('hidden');
-        accountDropdownArrow.style.transform = 'rotate(0deg)';
+        // Desktop behavior - toggle sidebar width
+        const mainContent = document.getElementById('mainContent');
+        if (sidebarOpen) {
+            sidebar.style.transform = 'translateX(-240px)';
+            if (mainContent) mainContent.style.marginLeft = '24px';
+        } else {
+            sidebar.style.transform = 'translateX(0)';
+            if (mainContent) mainContent.style.marginLeft = '256px';
+        }
+        sidebarOpen = !sidebarOpen;
     }
 }
 
-function closeAccountDropdown() {
-    accountDropdownMenu.classList.remove('show');
-    accountDropdownMenu.classList.add('hidden');
-    accountDropdownArrow.style.transform = 'rotate(0deg)';
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    sidebar.classList.remove('open');
+    overlay.classList.add('hidden');
 }
 
-accountDropdownBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    toggleAccountDropdown();
-});
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    if (!accountDropdownBtn.contains(e.target) && !accountDropdownMenu.contains(e.target)) {
-        closeAccountDropdown();
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
     }
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // Set initial main content margin for desktop
+    if (window.innerWidth >= 768) {
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) mainContent.style.marginLeft = '256px';
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        const isMobile = window.innerWidth < 768;
+        const sidebar = document.getElementById('sidebar');
+
+        const mainContent = document.getElementById('mainContent');
+        if (isMobile) {
+            if (mainContent) mainContent.style.marginLeft = '0';
+            sidebar.style.transform = '';
+        } else {
+            if (mainContent) mainContent.style.marginLeft = sidebarOpen ? '256px' : '24px';
+            sidebar.classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.add('hidden');
+        }
+    });
 });
 
 // Keyboard navigation support
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        closeMobileMenu();
-        closeAccountDropdown();
+        closeSidebar();
     }
 });
 
 // Account Settings Functions
 function showMyProfile() {
-    // Close the dropdown first
-    closeAccountDropdown();
 
     // Create and show account settings modal
     const modal = document.createElement('div');
@@ -405,8 +438,6 @@ function showMyProfile() {
 }
 
 function showChangePassword() {
-    // Close the dropdown first
-    closeAccountDropdown();
 
     // Create and show change password modal
     const modal = document.createElement('div');
@@ -472,6 +503,7 @@ function showChangePassword() {
 
 
 
+// Legacy function - now using dedicated page
 function showSystemSettings() {
     closeAccountDropdown();
 

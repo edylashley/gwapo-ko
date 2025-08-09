@@ -19,7 +19,13 @@ class SystemSettingsController extends Controller
             'maintenance_mode' => SystemSetting::get('maintenance_mode', false),
         ];
 
-        return response()->json($settings);
+        // If request wants JSON, return JSON
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json($settings);
+        }
+
+        // Otherwise return the view
+        return view('admin.system-settings', compact('settings'));
     }
 
     /**

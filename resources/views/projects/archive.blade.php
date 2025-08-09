@@ -159,14 +159,27 @@
             background: rgba(107, 114, 128, 0.2);
             transform: translateY(-1px);
         }
+
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
     </style>
 </head>
-<body class="min-h-screen px-4 py-10" style="background: #064e3b;">
+<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Project Archive'])
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto mt-24">
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
+    <div class="max-w-7xl mx-auto">
         <!-- Info Banner -->
         <div class="glass-card card-delay-1 p-6 mb-8">
             <div>
@@ -861,6 +874,7 @@ async function unarchiveProject(projectId, projectName) {
                 </div>
             </div>
         </div>
-    </div>
+    </div> <!-- Close max-w-7xl -->
+    </div> <!-- Close main content -->
 </body>
 </html>

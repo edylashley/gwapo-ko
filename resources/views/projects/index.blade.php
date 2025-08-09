@@ -7,6 +7,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <style>
+/* Reset any default margins/padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
 /* Glass Card Base Styles */
 .glass-card {
@@ -30,18 +41,8 @@
 .glass-card.card-delay-4 { animation-delay: 0.55s; }
 
 /* Hover Effect */
-/* Remove hover effect from previously hovered cards */
 .glass-card {
     will-change: transform, box-shadow, background;
-}
-
-/* Use only .project-card:hover for hover effect */
-.project-card:hover {
-    transform: translateY(-8px);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    z-index: 2;
 }
 
 /* Floating Animation */
@@ -67,6 +68,12 @@
             transform: none;
         }
     }
+
+    .animate-fadeInUp {
+        opacity: 0;
+        transform: translateY(40px);
+        animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
     .custom-confirm-dialog {
     animation: confirmDialogFadeIn 0.3s ease-out;
 }
@@ -81,24 +88,7 @@
         transform: scale(1);
     }
 }
-    /* Project Card Specific Styles */
-    .project-card {
-        position: relative;
-        overflow: hidden;
-    }
-    .project-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    .project-card:hover::before {
-        left: 100%;
-    }
+    /* Project Card Specific Styles - moved to consolidated section below */
     /* Budget Status Indicators */
     .budget-status {
         padding: 0.5rem 1rem;
@@ -120,15 +110,14 @@
         color: rgb(16, 185, 129);
     }
 </style>
-<body class="min-h-screen px-4" style="background: #064e3b;">
-    
-    <!-- Desktop Navigation -->
-    <div class="desktop-nav">
-        @include('components.navigation', ['pageTitle' => 'Project Management'])
-    </div>
-    
+<body class="min-h-screen transition-all duration-300" style="background: #064e3b;">
+
+    <!-- Navigation -->
+    @include('components.navigation', ['pageTitle' => 'Project Management'])
+
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto mt-20">
+    <div class="main-content px-4 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
+    <div class="max-w-7xl mx-auto">
         <!-- Skeleton Summary Cards (shown while loading) -->
         <div id="skeletonSummaryCards" class="skeleton-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="skeleton-summary-card">
@@ -162,7 +151,7 @@
         </div>
         
         <!-- Summary Cards -->
-        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-5">
+        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Projects -->
             <div class="glass-card card-delay-1 flex items-center p-6">
                 <div class="bg-green-100 text-green-600 rounded-full p-3 mr-4">
@@ -206,7 +195,7 @@
         </div>
 
         <!-- Search Bar and Controls -->
-        <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div class="animate-fadeInUp flex flex-col lg:flex-row justify-between items-center gap-4 mb-6" style="animation-delay: 0.20s;">
             <!-- Left Side: Search and Selection Controls -->
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 <!-- Search Bar -->
@@ -224,12 +213,10 @@
 
                 <!-- Selection Controls -->
                 <div class="flex items-center gap-3">
-                    <button id="selectAllBtn" class="techy-btn bg-slate-600 hover:bg-slate-700 text-white px-4 py-1 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-10 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1">
-                        Select All
-                    </button>
-                    <button id="clearSelectionBtn" class="techy-btn bg-slate-600 hover:bg-slate-700 text-white px-4 py-1 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-10 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1">
-                        Clear
-                    </button>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="selectAllCheckbox" class="w-5 h-5 text-emerald-600 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-emerald-500 focus:ring-2">
+                        <span class="text-white font-semibold">Select All</span>
+                    </label>
 
                     <button id="trackRecordBtn" class="track-record-btn bg-slate-700 hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1" disabled>
                         Track Record (<span id="selectedCount">0</span>)
@@ -708,30 +695,25 @@
     </div>
 
     <style>
-<style>
-/* Enhanced Card Animations */
-.project-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-/* Enhanced Card Animations */
-.project-card {
+/* Apply dashboard-style hover effects to glass cards on project page */
+.glass-card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     border-radius: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateY(0);
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
     opacity: 1;
+    position: relative;
+    overflow: hidden;
 }
-.project-card:hover {
-    transform: translateY(-8px);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+
+/* Dashboard-style hover effect - same as dashboard glass cards */
+.glass-card:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 32px 0 #00c6ff55;
+    background: rgba(255,255,255,0.22);
 }
     transition: width 1s ease-in-out;
     border-radius: 999px;
@@ -816,6 +798,69 @@
     <script>
         // Pass admin status to JavaScript
         const isUserAdmin = @json(auth()->user()->is_admin);
+
+        // Centralized Modal Management System
+        const ModalManager = {
+            modalStack: [],
+
+            // Register when a modal is opened
+            openModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    // Add to stack if not already there
+                    if (!this.modalStack.includes(modalId)) {
+                        this.modalStack.push(modalId);
+                    }
+                    console.log('Modal opened:', modalId, 'Stack:', this.modalStack);
+                }
+            },
+
+            // Register when a modal is closed
+            closeModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                    // Remove from stack
+                    const index = this.modalStack.indexOf(modalId);
+                    if (index > -1) {
+                        this.modalStack.splice(index, 1);
+                    }
+                    console.log('Modal closed:', modalId, 'Stack:', this.modalStack);
+                }
+            },
+
+            // Close the most recently opened modal
+            closeTopModal: function() {
+                if (this.modalStack.length > 0) {
+                    const topModalId = this.modalStack[this.modalStack.length - 1];
+                    this.closeModal(topModalId);
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        // Single ESC key handler for all modals and search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // First priority: Close the most recently opened modal
+                const closed = ModalManager.closeTopModal();
+                if (closed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                // Second priority: Clear search if no modals are open
+                const searchInput = document.getElementById('projectSearch');
+                if (searchInput && searchInput.value !== '') {
+                    searchInput.value = '';
+                    searchInput.dispatchEvent(new Event('input'));
+                    e.preventDefault();
+                }
+            }
+        });
 
         // Global variables
         let currentReceiptData = null;
@@ -941,7 +986,7 @@
             projectForm.reset();
             document.getElementById('projectId').value = '';
             loadProjectEngineers(); // Load engineers when opening modal
-            addProjectModal.classList.remove('hidden');
+            ModalManager.openModal('addProjectModal');
         }
 
         // Open modal for editing project
@@ -959,12 +1004,12 @@
                 document.getElementById('projectEngineer').value = engineerId || '';
             }, 100); // Small delay to ensure options are loaded
 
-            addProjectModal.classList.remove('hidden');
+            ModalManager.openModal('addProjectModal');
         }
 
         // Close modal
         function closeModal() {
-            addProjectModal.classList.add('hidden');
+            ModalManager.closeModal('addProjectModal');
         }
 
         // Open expense modal
@@ -974,12 +1019,12 @@
             document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; // Set today's date
             addExpenseForm.reset();
             document.getElementById('expenseProjectId').value = projectId; // Reset clears this, so set it again
-            addExpenseModal.classList.remove('hidden');
+            ModalManager.openModal('addExpenseModal');
         }
 
         // Close expense modal
         function closeExpenseModal() {
-            addExpenseModal.classList.add('hidden');
+            ModalManager.closeModal('addExpenseModal');
         }
 
         // Event listeners
@@ -992,13 +1037,7 @@
         closeAddExpenseBtn.addEventListener('click', closeExpenseModal);
         cancelExpenseBtn.addEventListener('click', closeExpenseModal);
 
-        // Close modal on escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeExpenseModal();
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Edit project buttons
         document.querySelectorAll('.edit-project-btn').forEach(btn => {
@@ -1299,24 +1338,33 @@
 
         // Project Selection functionality
         const projectCheckboxes = document.querySelectorAll('.project-checkbox');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         const trackRecordBtn = document.getElementById('trackRecordBtn');
         const selectedCountSpan = document.getElementById('selectedCount');
         const trackRecordModal = document.getElementById('trackRecordModal');
         const closeTrackRecordBtn = document.getElementById('closeTrackRecordModal');
 
-        // Update selected count and button state
+        // Update selected count and checkbox state
         function updateSelectionState() {
             const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
             const count = selectedCheckboxes.length;
+            const totalCheckboxes = projectCheckboxes.length;
 
             selectedCountSpan.textContent = count;
             trackRecordBtn.disabled = count === 0;
 
+            // Update select all checkbox state
             if (count === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
                 trackRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (count === totalCheckboxes) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+                trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true; // Show indeterminate state for partial selection
                 trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
@@ -1326,21 +1374,17 @@
             checkbox.addEventListener('change', updateSelectionState);
         });
 
-        // Select All functionality
-        selectAllBtn.addEventListener('click', function() {
+        // Select All Checkbox functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+
+            // Set all project checkboxes to match the select all checkbox
             projectCheckboxes.forEach(checkbox => {
-                checkbox.checked = true;
+                checkbox.checked = isChecked;
             });
+
             updateSelectionState();
         });
-
-                   // Clear Selection functionality
-            clearSelectionBtn.addEventListener('click', function() {
-                projectCheckboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-                updateSelectionState();
-            });
 
 
         // Global variable to store currently selected projects
@@ -1361,16 +1405,10 @@
 
         // Close track record modal
         closeTrackRecordBtn.addEventListener('click', function() {
-            trackRecordModal.classList.add('hidden');
+            ModalManager.closeModal('trackRecordModal');
         });
 
-        // Close modal on escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                trackRecordModal.classList.add('hidden');
-                document.getElementById('editExpenseModal').classList.add('hidden');
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Edit Expense Modal functionality
         const editExpenseModal = document.getElementById('editExpenseModal');
@@ -1381,13 +1419,13 @@
         // Close edit expense modal (only for admins)
         if (closeEditExpenseBtn) {
             closeEditExpenseBtn.addEventListener('click', function() {
-                editExpenseModal.classList.add('hidden');
+                ModalManager.closeModal('editExpenseModal');
             });
         }
 
         if (cancelEditExpenseBtn) {
             cancelEditExpenseBtn.addEventListener('click', function() {
-                editExpenseModal.classList.add('hidden');
+                ModalManager.closeModal('editExpenseModal');
             });
         }
 
@@ -1427,7 +1465,7 @@
             await updateExpense(expenseId, description, amount, date, projectId);
 
             // Close modal
-            editExpenseModal.classList.add('hidden');
+            ModalManager.closeModal('editExpenseModal');
             });
         }
 
@@ -1447,8 +1485,8 @@
                 document.getElementById('selectedProjectsInfo').textContent =
                     `Selected Projects: ${selectedProjects.length}`;
 
-                // Show modal
-                trackRecordModal.classList.remove('hidden');
+                // Show modal using modal manager
+                ModalManager.openModal('trackRecordModal');
 
                 // Show loading spinner while fetching data
                 const modalContent = document.getElementById('projectsContainer');
@@ -1613,7 +1651,7 @@ window.editExpense = function(expenseId, description, amount, date, projectId) {
     document.getElementById('editExpenseDate').value = date;
     document.getElementById('editExpenseForm').dataset.projectId = projectId;
 
-    document.getElementById('editExpenseModal').classList.remove('hidden');
+    ModalManager.openModal('editExpenseModal');
 };
 
 // Edit Expense Modal functionality
@@ -1623,7 +1661,7 @@ const cancelEditExpenseBtn = document.getElementById('cancelEditExpenseBtn');
 const editExpenseForm = document.getElementById('editExpenseForm');
 
 function closeEditExpenseModalAndRestore() {
-    editExpenseModal.classList.add('hidden');
+    ModalManager.closeModal('editExpenseModal');
     editExpenseForm.reset();
 }
 if (closeEditExpenseBtn) closeEditExpenseBtn.addEventListener('click', closeEditExpenseModalAndRestore);
@@ -1669,7 +1707,7 @@ if (editExpenseForm) {
                 hideOverlayLoading(modalContent);
                 
                 showCenteredNotification('Error loading project track records. Please try again.', 'error', 4000);
-                trackRecordModal.classList.add('hidden');
+                ModalManager.closeModal('trackRecordModal');
             }
         }
 
@@ -1727,7 +1765,7 @@ if (editExpenseForm) {
             document.getElementById('editExpenseForm').dataset.projectId = projectId;
 
             // Show the edit modal
-            document.getElementById('editExpenseModal').classList.remove('hidden');
+            ModalManager.openModal('editExpenseModal');
         }
 
         // Delete expense function
@@ -1840,7 +1878,7 @@ if (editExpenseForm) {
                 </div>
             `;
 
-            receiptModal.classList.remove('hidden');
+            ModalManager.openModal('receiptModal');
             console.log('Receipt modal opened');
 
             // Load receipt content
@@ -1943,7 +1981,7 @@ if (editExpenseForm) {
         }
 
         function closeReceiptModal() {
-            document.getElementById('receiptModal').classList.add('hidden');
+            ModalManager.closeModal('receiptModal');
             currentReceiptData = null;
         }
 
@@ -2024,12 +2062,7 @@ if (editExpenseForm) {
             }
         });
 
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('receiptModal').classList.contains('hidden')) {
-                closeReceiptModal();
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Close button event listener
         document.getElementById('closeReceiptModal').addEventListener('click', closeReceiptModal);
@@ -2087,7 +2120,7 @@ if (editExpenseForm) {
             }
         });
 
-        // Minimal keyboard shortcuts (Ctrl+K and Esc)
+        // Keyboard shortcuts (Ctrl+K for search)
         document.addEventListener('keydown', function(e) {
             // Ctrl+K or Cmd+K for quick search
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -2099,32 +2132,7 @@ if (editExpenseForm) {
                 }
                 return;
             }
-            
-            // Esc to close modals or clear search
-            if (e.key === 'Escape') {
-                // First priority: Close any open modals
-                const openModals = [
-                    document.getElementById('addProjectModal'),
-                    document.getElementById('addExpenseModal'),
-                    document.getElementById('editSalariesModal'),
-                    document.getElementById('trackRecordModal'),
-                    document.getElementById('receiptModal'),
-                    document.getElementById('editExpenseModal'),
-                    document.getElementById('customConfirmOverlay')
-                ].filter(modal => modal && !modal.classList.contains('hidden'));
-                
-                if (openModals.length > 0) {
-                    openModals[0].classList.add('hidden');
-                    return;
-                }
-                
-                // Second priority: Clear search if no modals are open
-                const searchInput = document.getElementById('projectSearch');
-                if (searchInput && searchInput.value !== '') {
-                    searchInput.value = '';
-                    searchInput.dispatchEvent(new Event('input'));
-                }
-            }
+            // ESC handling removed - using centralized modal manager only
         });
         
         // Mobile Navigation and Sidebar Functionality
@@ -2177,10 +2185,12 @@ if (editExpenseForm) {
         let touchEndY = 0;
         let currentSwipeCard = null;
         
+        // Hover effects disabled for project cards
+
         // Add touch event listeners to project cards
         function addSwipeListeners() {
             const projectCards = document.querySelectorAll('.project-card');
-            
+
             projectCards.forEach(card => {
                 // Add swipe indicator for mobile
                 if (window.innerWidth <= 768 && !card.querySelector('.swipe-indicator')) {
@@ -2829,7 +2839,7 @@ function performAjaxWithLoading(options) {
 
 function openEditSalariesModal(projectId) {
     window.currentEditSalariesProjectId = projectId;
-    document.getElementById('editSalariesModal').classList.remove('hidden');
+    ModalManager.openModal('editSalariesModal');
     fetch(`/projects/${projectId}/team-salaries`)
         .then(res => res.json())
         .then(data => {
@@ -2937,7 +2947,7 @@ function openEditSalariesModal(projectId) {
 }
 
 function closeEditSalariesModal() {
-    document.getElementById('editSalariesModal').classList.add('hidden');
+    ModalManager.closeModal('editSalariesModal');
     // After closing salaries modal, refresh track record if open and this project is selected
     if (typeof trackRecordModal !== 'undefined' && !trackRecordModal.classList.contains('hidden') &&
         typeof currentSelectedProjects !== 'undefined' &&
@@ -2988,6 +2998,7 @@ function closeEditSalariesModal() {
     </div>
 </div>
 
+    </div> <!-- Close main content div -->
 </body>
 </html>
 
