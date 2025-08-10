@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 </head>
-<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
+<body style="background: #064e3b;;" class="min-h-screen">
     @include('components.navigation')
 
     <style>
@@ -286,7 +286,7 @@
         }
 
         // Custom centered notification with blurred background
-        function showCenteredNotification(message, type = 'success', duration = 3000) {
+        function showCenteredNotification(message, type = 'success', duration = 1000) {
             // Create backdrop overlay with blur
             const overlay = document.createElement('div');
             overlay.className = 'notification-overlay';
@@ -401,7 +401,7 @@
                     const data = await response.json();
 
                     // Show centered success message
-                    showCenteredNotification(data.message, 'success', 3000);
+                    showCenteredNotification(data.message, 'success', 1000);
 
                     // Enhanced visual effects for restore
                     const projectCard = document.querySelector(`[data-project-id="${id}"]`).closest('.deleted-project-card');
@@ -413,22 +413,12 @@
                         projectCard.style.transform = 'scale(1.05)';
                         projectCard.style.boxShadow = '0 10px 30px rgba(34, 197, 94, 0.3)';
 
-                        // Add success icon overlay
-                        const successOverlay = document.createElement('div');
-                        successOverlay.className = 'absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-20 rounded-2xl';
-                        successOverlay.innerHTML = `
-                            <div class="text-6xl text-green-400 animate-bounce">
-                                ✅
-                            </div>
-                        `;
-                        projectCard.style.position = 'relative';
-                        projectCard.appendChild(successOverlay);
+                        // Success overlay removed - no check animation
 
                         // Fade out animation
                         setTimeout(() => {
                             projectCard.style.opacity = '0';
                             projectCard.style.transform = 'scale(0.8) translateY(-20px)';
-                            projectCard.style.filter = 'blur(2px)';
                         }, 1000);
 
                         // Remove card from DOM
@@ -510,7 +500,7 @@
                     const data = await response.json();
 
                     // Show centered deletion message (red color for deletion)
-                    showCenteredNotification(data.message, 'error', 3000);
+                    showCenteredNotification(data.message, 'error', 1000);
 
                     // Enhanced visual effects for permanent deletion
                     const projectCard = document.querySelector(`[data-project-id="${id}"]`).closest('.deleted-project-card');
@@ -542,7 +532,6 @@
                         setTimeout(() => {
                             projectCard.style.opacity = '0';
                             projectCard.style.transform = 'scale(0.3) rotate(10deg)';
-                            projectCard.style.filter = 'blur(5px)';
                         }, 1000);
 
                         // Remove card from DOM

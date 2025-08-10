@@ -512,8 +512,8 @@ body {
         </div>
     </div>
 
-    <!-- Back to Top Button -->
-    <button id="backToTopBtn" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3" onclick="scrollToTop()">
+    <!-- Back to Top Button - Centered in main content area (accounting for sidebar) -->
+    <button id="backToTopBtn" class="fixed bottom-8 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3 pointer-events-auto" onclick="scrollToTop()" style="left: calc(50% + 128px); transform: translateX(-50%);">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
         </svg>
@@ -886,7 +886,7 @@ body {
 
 
         // Custom centered notification with blur effect
-        function showCenteredNotification(message, type = 'success', duration = 3000) {
+        function showCenteredNotification(message, type = 'success', duration = 1000) {
             // Create backdrop overlay with blur
             const overlay = document.createElement('div');
             overlay.className = 'notification-overlay';
@@ -898,7 +898,6 @@ body {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.3);
                 backdrop-filter: blur(6px);
-                -webkit-backdrop-filter: blur(6px);
                 z-index: 9998;
                 opacity: 0;
                 transition: opacity 0.3s ease;
@@ -1062,25 +1061,39 @@ body {
 
         // Archive project buttons
         document.querySelectorAll('.archive-project-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 const id = this.dataset.projectId;
                 const name = this.dataset.projectName;
-                showCenteredConfirm(
-                    `Are you sure you want to archive "${name}"? Archived projects can be viewed in the Archive section.`,
-                    () => archiveProject(id, name)
-                );
+                console.log('Archive button clicked:', { id, name, isUserAdmin });
+
+                // Add a small delay to ensure the click event is fully processed
+                setTimeout(() => {
+                    showCenteredConfirm(
+                        `Are you sure you want to archive "${name}"? Archived projects can be viewed in the Archive section.`,
+                        () => archiveProject(id, name)
+                    );
+                }, 10);
             });
         });
 
         // Delete project buttons
         document.querySelectorAll('.delete-project-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 const id = this.dataset.projectId;
                 const name = this.dataset.projectName;
-                showCenteredConfirm(
-                    `Are you sure you want to delete "${name}"? You can restore it from Recently Deleted if needed.`,
-                    () => deleteProject(id, name)
-                );
+                console.log('Delete button clicked:', { id, name, isUserAdmin });
+
+                // Add a small delay to ensure the click event is fully processed
+                setTimeout(() => {
+                    showCenteredConfirm(
+                        `Are you sure you want to delete "${name}"? You can restore it from Recently Deleted if needed.`,
+                        () => deleteProject(id, name)
+                    );
+                }, 10);
             });
         });
 
@@ -1129,11 +1142,11 @@ body {
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error saving project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error saving project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error saving project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 hideButtonLoading(submitButton, originalText);
@@ -1184,11 +1197,11 @@ body {
                         errorMessage = Object.values(errorData.errors).flat().join(', ');
                     }
 
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error adding expense. Please try again.', 'error', 4000);
+                showCenteredNotification('Error adding expense. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 hideButtonLoading(submitButton, originalText);
@@ -1197,9 +1210,16 @@ body {
 
         // Archive project function
         async function archiveProject(id, name) {
+            console.log('archiveProject function called:', { id, name, isUserAdmin });
+
+            if (!isUserAdmin) {
+                showCenteredNotification('You do not have permission to archive projects.', 'error', 1000);
+                return;
+            }
+
             const archiveButton = document.querySelector(`[data-project-id="${id}"].archive-project-btn`);
             const originalText = archiveButton ? archiveButton.textContent : 'Archive';
-            
+
             try {
                 // Show loading spinner on archive button
                 if (archiveButton) {
@@ -1220,7 +1240,7 @@ body {
                     console.log('Success:', data.message);
 
                     // Show centered success message
-                    showCenteredNotification(data.message, 'success', 4000);
+                    showCenteredNotification(data.message, 'success', 1000);
 
                     // Reload page
                     setTimeout(() => {
@@ -1229,11 +1249,11 @@ body {
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error archiving project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error archiving project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error archiving project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 if (archiveButton) {
@@ -1244,9 +1264,16 @@ body {
 
         // Delete project function
         async function deleteProject(id, name) {
+            console.log('deleteProject function called:', { id, name, isUserAdmin });
+
+            if (!isUserAdmin) {
+                showCenteredNotification('You do not have permission to delete projects.', 'error', 1000);
+                return;
+            }
+
             const deleteButton = document.querySelector(`[data-project-id="${id}"].delete-project-btn`);
             const originalText = deleteButton ? deleteButton.textContent : 'Delete';
-            
+
             try {
                 // Show loading spinner on delete button
                 if (deleteButton) {
@@ -1268,7 +1295,7 @@ body {
                     console.log('Success:', data.message);
 
                     // Show centered deletion message (red color for deletion)
-                    showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 4000);
+                    showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 1000);
 
                     // Reload page
                     setTimeout(() => {
@@ -1277,11 +1304,11 @@ body {
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error deleting project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error deleting project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error deleting project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 if (deleteButton) {
@@ -1706,7 +1733,7 @@ if (editExpenseForm) {
                 const modalContent = document.getElementById('projectsContainer');
                 hideOverlayLoading(modalContent);
                 
-                showCenteredNotification('Error loading project track records. Please try again.', 'error', 4000);
+                showCenteredNotification('Error loading project track records. Please try again.', 'error', 1000);
                 ModalManager.closeModal('trackRecordModal');
             }
         }
@@ -1816,11 +1843,11 @@ if (editExpenseForm) {
                         // If not JSON, use the text as error message
                         errorMessage = errorText || errorMessage;
                     }
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error updating expense:', error);
-                showCenteredNotification('Error updating expense. Please try again.', 'error', 4000);
+                showCenteredNotification('Error updating expense. Please try again.', 'error', 1000);
             }
         }
 
@@ -1843,11 +1870,11 @@ if (editExpenseForm) {
                     }, 1000);
                 } else {
                     const errorData = await response.json().catch(() => ({}));
-                    showCenteredNotification(errorData.message || 'Error deleting expense', 'error', 4000);
+                    showCenteredNotification(errorData.message || 'Error deleting expense', 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error deleting expense:', error);
-                showCenteredNotification('Error deleting expense. Please try again.', 'error', 4000);
+                showCenteredNotification('Error deleting expense. Please try again.', 'error', 1000);
             }
         }
 
@@ -2648,62 +2675,135 @@ if (editExpenseForm) {
 
         // --- Helper for showing the modal using the new HTML structure ---
 function showCenteredConfirm(message, onConfirm, onCancel = null) {
-    const overlay = document.getElementById('customConfirmOverlay');
-    const msg = document.getElementById('customConfirmMessage');
-    const btnOk = document.getElementById('customConfirmOk');
-    const btnCancel = document.getElementById('customConfirmCancel');
+    console.log('showCenteredConfirm called with message:', message);
 
-    msg.textContent = message;
-    overlay.classList.remove('hidden');
+    // Create a completely isolated confirmation dialog
+    const confirmDialog = document.createElement('div');
+    confirmDialog.id = 'isolatedConfirmDialog';
+    confirmDialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    `;
 
-    // Remove previous listeners
-    btnOk.onclick = null;
-    btnCancel.onclick = null;
-    overlay.onclick = null;
+    const dialogBox = document.createElement('div');
+    dialogBox.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: confirmDialogFadeIn 0.3s ease-out;
+    `;
 
-    btnOk.onclick = function() {
-        overlay.classList.add('hidden');
-        if (onConfirm) onConfirm();
-    };
-    btnCancel.onclick = function() {
-        overlay.classList.add('hidden');
+    dialogBox.innerHTML = `
+        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+            <div style="font-size: 24px; margin-right: 12px;">⚠️</div>
+            <h3 style="font-size: 18px; font-weight: 600; color: #374151; margin: 0;">Confirm Action</h3>
+        </div>
+        <p style="color: #6b7280; margin-bottom: 24px; line-height: 1.5;">${message}</p>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button id="isolatedCancelBtn" style="
+                padding: 8px 16px;
+                background: #e5e7eb;
+                color: #374151;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            ">Cancel</button>
+            <button id="isolatedConfirmBtn" style="
+                padding: 8px 16px;
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            ">Confirm</button>
+        </div>
+    `;
+
+    confirmDialog.appendChild(dialogBox);
+    document.body.appendChild(confirmDialog);
+
+    // Add hover effects
+    const cancelBtn = dialogBox.querySelector('#isolatedCancelBtn');
+    const confirmBtn = dialogBox.querySelector('#isolatedConfirmBtn');
+
+    cancelBtn.addEventListener('mouseenter', () => {
+        cancelBtn.style.backgroundColor = '#d1d5db';
+    });
+    cancelBtn.addEventListener('mouseleave', () => {
+        cancelBtn.style.backgroundColor = '#e5e7eb';
+    });
+
+    confirmBtn.addEventListener('mouseenter', () => {
+        confirmBtn.style.backgroundColor = '#dc2626';
+    });
+    confirmBtn.addEventListener('mouseleave', () => {
+        confirmBtn.style.backgroundColor = '#ef4444';
+    });
+
+    function closeDialog() {
+        if (confirmDialog && confirmDialog.parentNode) {
+            confirmDialog.parentNode.removeChild(confirmDialog);
+        }
+    }
+
+    // Event handlers
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Cancel button clicked');
+        closeDialog();
         if (onCancel) onCancel();
-    };
-    overlay.onclick = function(e) {
-        if (e.target === overlay) {
-            overlay.classList.add('hidden');
+    });
+
+    confirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Confirm button clicked');
+        closeDialog();
+        if (onConfirm) onConfirm();
+    });
+
+    // Close on overlay click
+    confirmDialog.addEventListener('click', (e) => {
+        if (e.target === confirmDialog) {
+            console.log('Overlay clicked, closing dialog');
+            closeDialog();
             if (onCancel) onCancel();
         }
+    });
+
+    // ESC key handler
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            console.log('ESC pressed, closing confirmation dialog');
+            closeDialog();
+            if (onCancel) onCancel();
+            document.removeEventListener('keydown', escHandler);
+        }
     };
+    document.addEventListener('keydown', escHandler);
+
+    console.log('Isolated confirmation dialog created and shown');
 }
 
-// --- Archive Button Handler ---
-document.querySelectorAll('.archive-project-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const projectId = this.dataset.projectId;
-        const projectName = this.dataset.projectName;
-        showCenteredConfirm(
-            `Are you sure you want to archive "${projectName}"? Archived projects can be viewed in the Archive section.`,
-            function() {
-                archiveProject(projectId, projectName); // <--- Use the robust async function!
-            }
-        );
-    });
-});
-
-// --- Delete Button Handler ---
-document.querySelectorAll('.delete-project-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const projectId = this.dataset.projectId;
-        const projectName = this.dataset.projectName;
-        showCenteredConfirm(
-            `Are you sure you want to delete "${projectName}"? You can restore it from Recently Deleted if needed.`,
-            function() {
-                deleteProject(projectId, projectName); // <--- Use the robust async function!
-            }
-        );
-    });
-});
+// Archive and Delete button handlers are already defined above in the main initialization section
 
     </script>
 

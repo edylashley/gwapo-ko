@@ -12,14 +12,105 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             margin: 0 !important;
             padding: 0 !important;
         }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #10b981;
+        }
+
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #10b981;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
     </style>
 </head>
-<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
+<body style="background: #064e3b;;" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'System Settings'])
 
@@ -63,24 +154,28 @@
                     <!-- User Registration Settings -->
                     <div class="space-y-4">
                         <h3 class="text-xl font-bold text-white mb-4">User Registration</h3>
-                        
-                        <div class="flex items-center">
-                            <input type="checkbox" 
-                                   id="allow_user_registration"
-                                   name="allow_user_registration" 
-                                   class="w-4 h-4 text-green-600 bg-white bg-opacity-90 border-gray-300 rounded focus:ring-green-500">
-                            <label for="allow_user_registration" class="ml-3 text-sm text-white">
+
+                        <div class="flex items-center justify-between">
+                            <label for="allow_user_registration" class="text-sm text-white">
                                 Allow new users to register accounts
                             </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       id="allow_user_registration"
+                                       name="allow_user_registration">
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <div class="flex items-center">
-                            <input type="checkbox" 
-                                   id="require_email_verification"
-                                   name="require_email_verification" 
-                                   class="w-4 h-4 text-green-600 bg-white bg-opacity-90 border-gray-300 rounded focus:ring-green-500">
-                            <label for="require_email_verification" class="ml-3 text-sm text-white">
+
+                        <div class="flex items-center justify-between">
+                            <label for="require_email_verification" class="text-sm text-white">
                                 Require email verification for new accounts
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       id="require_email_verification"
+                                       name="require_email_verification">
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
                     </div>
@@ -88,33 +183,53 @@
                     <!-- System Maintenance -->
                     <div class="space-y-4">
                         <h3 class="text-xl font-bold text-white mb-4">System Maintenance</h3>
-                        
-                        <div class="flex items-center">
-                            <input type="checkbox" 
-                                   id="maintenance_mode"
-                                   name="maintenance_mode" 
-                                   class="w-4 h-4 text-green-600 bg-white bg-opacity-90 border-gray-300 rounded focus:ring-green-500">
-                            <label for="maintenance_mode" class="ml-3 text-sm text-white">
+
+                        <div class="flex items-center justify-between">
+                            <label for="maintenance_mode" class="text-sm text-white">
                                 Enable maintenance mode (non-admin users will be blocked)
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       id="maintenance_mode"
+                                       name="maintenance_mode">
+                                <span class="toggle-slider"></span>
                             </label>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="flex justify-between items-center pt-6 border-t border-white border-opacity-20">
-                        <button type="button" 
-                                id="clearCacheBtn"
-                                class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-                             Clear Cache
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <button type="button"
+                                    id="clearCacheBtn"
+                                    class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-1 rounded-lg font-medium transition-colors">
+                                 Clear Cache
+                            </button>
+                            <div class="tooltip flex items-center">
+                                <button type="button" class="text-white hover:text-yellow-300 transition-colors flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                                <span class="tooltiptext">
+                                    <strong>Clear Cache</strong><br>
+                                    This will clear all cached data including:<br>
+                                    • Application cache<br>
+                                    • Route cache<br>
+                                    • Configuration cache<br>
+                                    • View cache<br><br>
+                                    Use this when you experience issues or after making configuration changes.
+                                </span>
+                            </div>
+                        </div>
                         
                         <div class="space-x-3">
                             <a href="/dashboard" 
-                               class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors inline-block">
+                               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded-lg font-medium transition-colors inline-block">
                                 Cancel
                             </a>
                             <button type="submit" 
-                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-lg font-medium transition-colors">
                                  Save Settings
                             </button>
                         </div>

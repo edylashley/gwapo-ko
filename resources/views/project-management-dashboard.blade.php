@@ -617,7 +617,7 @@
                 notification.style.transform = 'translate(-50%, -50%) scale(1)';
             });
 
-            // Remove notification after 3 seconds
+            // Remove notification after 1 second
             setTimeout(() => {
                 overlay.style.opacity = '0';
                 notification.style.opacity = '0';
@@ -631,7 +631,7 @@
                         document.body.removeChild(notification);
                     }
                 }, 300);
-            }, 3000);
+            }, 1000);
         }
 
         // Load engineers list

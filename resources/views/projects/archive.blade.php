@@ -173,7 +173,7 @@
         }
     </style>
 </head>
-<body style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);" class="min-h-screen">
+<body style="background: #064e3b;" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Project Archive'])
 
@@ -567,14 +567,14 @@ function downloadReceiptPDF() {
         function downloadReceiptExcel() {
             if (window.currentReceiptData) {
                 // Show info notification; Excel export is handled in the receipt view
-                showNotification('Excel download functionality will be implemented in the receipt view.', 'info', 3000);
+                showNotification('Excel download functionality will be implemented in the receipt view.', 'info', 1000);
             }
         }
 
 
 
         // Success notification with blur effect
-        function showNotification(message, type = 'success', duration = 3000) {
+        function showNotification(message, type = 'success', duration = 1000) {
             // Create backdrop overlay with blur
             const overlay = document.createElement('div');
             overlay.style.cssText = `
