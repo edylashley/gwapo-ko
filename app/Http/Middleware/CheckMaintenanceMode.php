@@ -16,19 +16,37 @@ class CheckMaintenanceMode
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if maintenance mode is enabled
-        $maintenanceMode = SystemSetting::get('maintenance_mode', false);
-
-        if ($maintenanceMode) {
-            // Allow admin users to bypass maintenance mode
-            if (auth()->check() && auth()->user()->is_admin) {
+        try {
+            // Always allow access to authentication routes
+            $authRoutes = [
+                'login', 'logout', 'password.request', 
+                'password.email', 'password.reset', 'password.update',
+                'verification.notice', 'verification.verify', 'verification.send'
+            ];
+            
+            // Get current route name safely
+            $routeName = $request->route() ? $request->route()->getName() : null;
+            
+            // Bypass maintenance mode for auth routes and admin users
+            if (in_array($routeName, $authRoutes) || 
+                (auth()->check() && auth()->user()->is_admin)) {
                 return $next($request);
             }
 
-            // Show maintenance page for non-admin users
-            return response()->view('maintenance', [], 503);
-        }
+            // Check if maintenance mode is enabled in database
+            $maintenanceMode = SystemSetting::get('maintenance_mode', false);
+            
+            // If maintenance mode is enabled, show maintenance page
+            if ($maintenanceMode === true || $maintenanceMode === 'true' || $maintenanceMode === '1') {
+                return response()->view('maintenance', [], 503);
+            }
 
-        return $next($request);
+            return $next($request);
+            
+        } catch (\Exception $e) {
+            // Log the error and allow access if there's an issue
+            \Log::error('Maintenance mode error: ' . $e->getMessage());
+            return $next($request);
+        }
     }
 }

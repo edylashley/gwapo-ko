@@ -5,26 +5,76 @@
     <title>User Management - Budget Control</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Glass card animations */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            opacity: 0;
+            transform: translateY(40px);
+            animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        
+        .glass-card.card-delay-1 { animation-delay: 0.1s; }
+        .glass-card.card-delay-2 { animation-delay: 0.25s; }
+        .glass-card.card-delay-3 { animation-delay: 0.4s; }
+        .glass-card.card-delay-4 { animation-delay: 0.55s; }
+        
+        .glass-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 32px 0 #00c6ff55;
+            background: rgba(255,255,255,0.22);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+    </style>
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
+<body style="background: #064e3b;" class="min-h-screen">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'User Management'])
 
     <!-- Main Content -->
-    <div class="pt-20">
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300 ml-64" id="mainContent">
         <div class="max-w-7xl mx-auto">
             
             <!-- Header Section -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 mb-8 overflow-hidden">
+            <div class="glass-card card-delay-1 overflow-hidden mb-8">
                 <div class="bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 px-8 py-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h1 class="text-3xl font-bold text-green-600">User Management</h1>
+                            <h1 class="text-3xl font-bold text-white">User Management</h1>
                             <p class="text-black mt-2">Manage system users and their permissions</p>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2  text-emerald-700 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                <span class="text-green-700 font-bold">{{ $users->total() }} Total Users</span>
+                                <span class="text-white font-bold">{{ $users->total() }} Total Users</span>
                             </div>
                             <a href="{{ route('users.create') }}"
                                class="bg-green-500 text-emerald-700 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 active:scale-95">
@@ -38,16 +88,21 @@
                 </div>
             </div>
 
-            <!-- Success/Error Messages -->
+            <!-- Floating Toast Notification -->
             @if(session('success'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-lg mb-6 shadow-sm">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ session('success') }}
-                    </div>
+                <div id="toast-success" class="fixed top-6 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3 animate-fadeInUp">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="font-semibold">{{ session('success') }}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-3 text-white hover:text-green-100 focus:outline-none">&times;</button>
                 </div>
+                <script>
+                    setTimeout(function() {
+                        var toast = document.getElementById('toast-success');
+                        if (toast) toast.remove();
+                    }, 3000);
+                </script>
             @endif
 
             @if(session('error'))
@@ -62,7 +117,7 @@
             @endif
 
             <!-- Users Table -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div class="glass-card card-delay-2 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -77,15 +132,14 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($users as $user)
-                                <tr class="hover:bg-gray-50 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">
+                                <tr class="hover:bg-opacity-20 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-white">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center text-green-500 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 hover:rotate-3">
+                                            <div class="w-10 h-10 bg-gray-600 bg-opacity-20 rounded-full flex items-center justify-center text-green-500 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 hover:rotate-3">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                                <div class="text-sm text-gray-500">User</div>
                                             </div>
                                         </div>
                                     </td>
@@ -311,5 +365,7 @@ tbody tr:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 </style>
+        </div> <!-- Close max-w-7xl -->
+    </div> <!-- Close main content -->
 </body>
 </html>

@@ -7,12 +7,28 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
-    
+<body style="background: #064e3b;" class="min-h-screen transition-all duration-300">
+
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Analytics Dashboard'])
 
+    <!-- Main Content -->
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;"
+         id="mainContent">
+
     <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -123,7 +139,7 @@
     </style>
 
     <!-- Project Engineer Management Section -->
-    <div class="max-w-7xl mx-auto mt-20 mb-6">
+    <div class="max-w-7xl mx-auto mb-6">
         <!-- Engineer Statistics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <!-- Total Engineers -->
@@ -174,7 +190,7 @@
                     <div class="flex-1 overflow-y-auto bg-white bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
                         <div id="projectsBudgetSummary" class="space-y-3">
                             <!-- Budget summary will be loaded here -->
-                            <div class="text-center text-gray-600 py-8">
+                            <div class="text-center text-white py-8">
                                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-3"></div>
                                 <p class="text-sm">Loading projects...</p>
                             </div>
@@ -221,10 +237,10 @@
                         </div>
 
                         <!-- Scrollable Engineers List -->
-                        <div class="flex-1 overflow-y-auto bg-blue-100 bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
-                            <div id="engineersList" class="space-y-3">
+                        <div class="flex-1 overflow-y-auto bg-blue-200 bg-opacity-10 rounded-lg p-4 engineers-scroll min-h-0">
+                            <div id="engineersList" class="space-y-3 ">
                                 <!-- Engineers will be loaded here -->
-                                <div class="text-center text-gray-600 py-8">
+                                <div class="text-center text-white py-8 bg-blue-200 bg-opacity-10">
                                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
                                     <p class="text-sm">Loading engineers...</p>
                                 </div>
@@ -266,10 +282,6 @@
                     <input type="email" id="engineerEmail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Specialization</label>
-                    <input type="text" id="engineerSpecialization" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" placeholder="You may proceed without filling this in.">
-                </div>
-                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Roles</label>
                     <div class="space-y-2">
                         <label class="flex items-center">
@@ -298,6 +310,52 @@
         // Pass admin status to JavaScript
         const isUserAdmin = @json(auth()->user()->is_admin);
 
+        // Simple Modal Management System for Dashboard
+        const ModalManager = {
+            modalStack: [],
+
+            openModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    if (!this.modalStack.includes(modalId)) {
+                        this.modalStack.push(modalId);
+                    }
+                }
+            },
+
+            closeModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                    const index = this.modalStack.indexOf(modalId);
+                    if (index > -1) {
+                        this.modalStack.splice(index, 1);
+                    }
+                }
+            },
+
+            closeTopModal: function() {
+                if (this.modalStack.length > 0) {
+                    const topModalId = this.modalStack[this.modalStack.length - 1];
+                    this.closeModal(topModalId);
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        // ESC key handler for modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const closed = ModalManager.closeTopModal();
+                if (closed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        });
+
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
@@ -313,15 +371,30 @@
         function setupEventListeners() {
             // Add Engineer Modal
             document.getElementById('addEngineerBtn').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.remove('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.openModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.remove('hidden');
+                }
             });
 
             document.getElementById('closeAddEngineerModal').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.add('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.closeModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.add('hidden');
+                }
             });
 
             document.getElementById('cancelAddEngineer').addEventListener('click', function() {
-                document.getElementById('addEngineerModal').classList.add('hidden');
+                // Use ModalManager for ESC support
+                if (typeof ModalManager !== 'undefined') {
+                    ModalManager.closeModal('addEngineerModal');
+                } else {
+                    document.getElementById('addEngineerModal').classList.add('hidden');
+                }
             });
 
             // Add Engineer Form
@@ -383,16 +456,16 @@
                         return `
                             <div class="bg-white bg-opacity-20 rounded-lg p-3 border border-white border-opacity-20 hover:bg-opacity-30 transition-all duration-200">
                                 <div class="flex justify-between items-start mb-2">
-                                    <h3 class="font-semibold text-gray-800 text-sm">${project.name}</h3>
+                                    <h2 class="font-bold text-gray-800 text-lg">${project.name}</h2>
                                     <span class="px-2 py-1 rounded text-xs font-bold text-white ${statusClass}">${statusText}</span>
                                 </div>
-                                <div class="text-xs text-gray-600 mb-2">
+                                <div class="text-base text-gray-800 mb-2">
                                     Budget: ₱${project.budget.toLocaleString()} | Spent: ₱${project.spent.toLocaleString()}
                                 </div>
                                 <div class="w-full bg-gray-300 rounded-full h-2 mb-1">
                                     <div class="h-2 rounded-full ${statusClass}" style="width: ${Math.min(percentUsed, 100)}%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600">${percentUsed.toFixed(1)}% used</div>
+                                <div class="text-base text-gray-800">${percentUsed.toFixed(1)}% used</div>
                             </div>
                         `;
                     }).join('');
@@ -423,7 +496,7 @@
                             <div class="flex items-start space-x-3 p-3 rounded-lg ${bgClass}">
                                 <span class="text-lg">${iconClass}</span>
                                 <div class="flex-1">
-                                    <div class="font-semibold text-white">${alert.title}</div>
+                                    <div class="font-bold text-white">${alert.title}</div>
                                     <div class="text-sm text-green-200">${alert.message}</div>
                                     <div class="text-xs text-green-300 mt-1">${alert.time}</div>
                                 </div>
@@ -445,7 +518,6 @@
         function addEngineer() {
             const name = document.getElementById('engineerName').value;
             const email = document.getElementById('engineerEmail').value;
-            const specialization = document.getElementById('engineerSpecialization').value;
             const canBeProjectEngineer = document.getElementById('canBeProjectEngineer').checked;
             const canBeMonthlyEngineer = document.getElementById('canBeMonthlyEngineer').checked;
 
@@ -461,7 +533,6 @@
                 body: JSON.stringify({
                     name: name,
                     email: email,
-                    specialization: specialization,
                     can_be_project_engineer: canBeProjectEngineer,
                     can_be_monthly_engineer: canBeMonthlyEngineer
                 })
@@ -470,7 +541,11 @@
             .then(data => {
                 if (data.success) {
                     // Close modal and reset form
-                    document.getElementById('addEngineerModal').classList.add('hidden');
+                    if (typeof ModalManager !== 'undefined') {
+                        ModalManager.closeModal('addEngineerModal');
+                    } else {
+                        document.getElementById('addEngineerModal').classList.add('hidden');
+                    }
                     document.getElementById('addEngineerForm').reset();
 
                     // Refresh all dashboard data
@@ -542,7 +617,7 @@
                 notification.style.transform = 'translate(-50%, -50%) scale(1)';
             });
 
-            // Remove notification after 3 seconds
+            // Remove notification after 1 seconds
             setTimeout(() => {
                 overlay.style.opacity = '0';
                 notification.style.opacity = '0';
@@ -556,7 +631,7 @@
                         document.body.removeChild(notification);
                     }
                 }, 300);
-            }, 3000);
+            }, 1000);
         }
 
         // Load engineers list
@@ -586,7 +661,7 @@
                 engineersCount.textContent = engineers.length;
 
                 engineersList.innerHTML = engineers.map(engineer => `
-                    <div class="bg-gray-50 hover:bg-gray-100 rounded-xl p-4 transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                    <div class="bg-green-100 hover:bg-green-100 rounded-xl p-4 transition-all duration-200 cursor-pointer group border border-gray-200 hover:border-gray-300 hover:shadow-md">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
@@ -595,21 +670,20 @@
                                 <div>
                                     <div class="text-gray-800 font-semibold text-base group-hover:text-blue-700 transition-colors">${engineer.name}</div>
                                     <div class="text-gray-600 text-sm">${engineer.email || 'No email provided'}</div>
-                                    <div class="text-xs text-gray-500">${engineer.specialization || 'General Engineering'}</div>
                                 </div>
                             </div>
                             <div class="text-right">
                                 <div class="flex flex-col space-y-1">
                                     ${engineer.can_be_project_engineer ?
-                                        '<div class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Project Engineer</div>' :
-                                        '<div class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">Team Member</div>'
+                                        '<div class="text-xs bg-green-300 text-green-700 px-2 py-1 rounded-full">Project Engineer</div>' :
+                                        '<div class="text-xs bg-gray-300 text-gray-500 px-2 py-1 rounded-full">Team Member</div>'
                                     }
                                     ${engineer.can_be_monthly_engineer ?
-                                        '<div class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Monthly Work</div>' :
+                                        '<div class="text-xs bg-blue-300 text-blue-700 px-2 py-1 rounded-full">Monthly Work</div>' :
                                         ''
                                     }
                                 </div>
-                                <div class="text-gray-400 text-xs mt-2">Joined ${engineer.created_at ? new Date(engineer.created_at).toLocaleDateString() : 'N/A'}</div>
+                                <div class="text-black text-xs mt-2">Joined ${engineer.created_at ? new Date(engineer.created_at).toLocaleDateString() : 'N/A'}</div>
                             </div>
                         </div>
                     </div>
@@ -657,10 +731,12 @@
                         const isAtBottom = engineersContainer.scrollTop + engineersContainer.clientHeight >= engineersContainer.scrollHeight - 5;
                         if (isAtBottom) {
                             scrollIndicator.style.opacity = '1';
-                            scrollIndicator.innerHTML = '<span>📍 End of engineers list</span>';
+                            scrollIndicator.innerHTML = '<span>End of engineers list</span>';
+                            scrollIndicator.style.color = 'white';
                         } else {
                             scrollIndicator.style.opacity = '1';
                             scrollIndicator.innerHTML = '<span>↕️ Scroll to see more engineers</span>';
+                            scrollIndicator.style.color = 'black';
                         }
                     });
                 } else {
@@ -702,5 +778,7 @@
             loadEngineers();
         }
     </script>
+
+    </div> <!-- Close main content div -->
 </body>
 </html>

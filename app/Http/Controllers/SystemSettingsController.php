@@ -19,7 +19,14 @@ class SystemSettingsController extends Controller
             'maintenance_mode' => SystemSetting::get('maintenance_mode', false),
         ];
 
-        return response()->json($settings);
+        
+        // If request wants JSON, return JSON
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json($settings);
+        }
+
+        // Otherwise return the view
+        return view('admin.system-settings', compact('settings'));
     }
 
     /**
@@ -28,14 +35,12 @@ class SystemSettingsController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'app_name' => 'required|string|max:255',
             'allow_user_registration' => 'boolean',
             'require_email_verification' => 'boolean',
             'maintenance_mode' => 'boolean',
         ]);
 
         // Update each setting
-        SystemSetting::set('app_name', $request->app_name, 'string', 'Application name displayed in the interface');
         SystemSetting::set('allow_user_registration', $request->boolean('allow_user_registration'), 'boolean', 'Allow new users to register accounts');
         SystemSetting::set('require_email_verification', $request->boolean('require_email_verification'), 'boolean', 'Require email verification for new accounts');
         SystemSetting::set('maintenance_mode', $request->boolean('maintenance_mode'), 'boolean', 'Enable maintenance mode for non-admin users');

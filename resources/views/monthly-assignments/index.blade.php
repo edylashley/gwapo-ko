@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,12 +8,24 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 </head>
-<body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
+<body style="background: #064e3b;;" class="min-h-screen">
 
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Monthly Team Assignments'])
 
     <style>
+        /* Reset any default margins/padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
@@ -21,6 +34,27 @@
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+            opacity: 0;
+            transform: translateY(40px);
+            animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        
+        .glass-card.card-delay-1 { animation-delay: 0.1s; }
+        .glass-card.card-delay-2 { animation-delay: 0.25s; }
+        .glass-card.card-delay-3 { animation-delay: 0.4s; }
+        .glass-card.card-delay-4 { animation-delay: 0.55s; }
+        
+        .glass-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 32px 0 #00c6ff55;
+            background: rgba(255,255,255,0.22);
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
         .techy-btn {
             background: rgba(255, 255, 255, 0.1);
@@ -35,7 +69,8 @@
     </style>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto mt-20 pt-8">
+    <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
+    <div class="max-w-7xl mx-auto">
         <!-- Page Header -->
         <div class="flex justify-between items-center mb-8">
             <div>
@@ -101,8 +136,11 @@
 
         <!-- Projects Grid -->
         <div class="grid gap-6" id="projectsGrid">
-            @forelse($projects as $project)
-                <div class="glass-card p-6 project-card"
+            @forelse($projects as $index => $project)
+                @php
+                    $delayClass = 'card-delay-' . (($index % 3) + 1);
+                @endphp
+                <div class="glass-card p-6 project-card {{ $delayClass }}"
                      data-project-name="{{ strtolower($project->name) }}"
                      data-fpp-code="{{ strtolower($project->fpp_code ?? '') }}"
                      data-project-engineer="{{ strtolower($project->projectEngineer ? $project->projectEngineer->name : '') }}"
@@ -274,10 +312,10 @@
         <div class="border-t pt-6">
             <h3 class="text-lg font-semibold text-gray-700 mb-3">Add Engineer to Team</h3>
             <div class="flex gap-3 mb-4">
-                <select id="newEngineerSelect" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="newEngineerSelect" class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mx-auto">
                     <option value="">Select an engineer...</option>
                     @foreach($monthlyEngineers as $engineer)
-                        <option value="{{ $engineer->id }}">{{ $engineer->name }} ({{ $engineer->specialization }})</option>
+                        <option value="{{ $engineer->id }}">{{ $engineer->name }} </option>
                     @endforeach
                 </select>
                 <label class="flex items-center">
@@ -305,6 +343,7 @@
 <div id="message-container" class="fixed top-4 right-4 z-50"></div>
 
 <script>
+
 let currentProjectId, currentProjectName, currentYear, currentMonth;
 
 function openTeamModal(projectId, projectName, year, month) {
@@ -724,5 +763,35 @@ function closeSuccessModal() {
     }, 300);
 }
 </script>
+    </div> <!-- Close max-w-7xl -->
+    </div> <!-- Close main content -->
+
+    <!-- Back to Top Button - Centered in main content area (accounting for sidebar) -->
+    <button id="backToTopBtn" class="fixed bottom-8 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3 pointer-events-auto" onclick="scrollToTop()" style="left: calc(50% + 128px); transform: translateX(-50%);">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+        <span class="text-base font-medium">TO TOP</span>
+    </button>
+
+    <script>
+    // Back to Top functionality
+    window.addEventListener('scroll', function() {
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (window.pageYOffset > 300) {
+            backToTopBtn.classList.remove('opacity-0', 'invisible');
+            backToTopBtn.classList.add('opacity-100', 'visible');
+        } else {
+            backToTopBtn.classList.remove('opacity-100', 'visible');
+            backToTopBtn.classList.add('opacity-0', 'invisible');
+        }
+    });
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+    </script>
 </body>
 </html>

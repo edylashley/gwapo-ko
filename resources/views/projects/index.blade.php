@@ -7,6 +7,17 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <style>
+/* Reset any default margins/padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
 /* Glass Card Base Styles */
 .glass-card {
@@ -30,18 +41,8 @@
 .glass-card.card-delay-4 { animation-delay: 0.55s; }
 
 /* Hover Effect */
-/* Remove hover effect from previously hovered cards */
 .glass-card {
     will-change: transform, box-shadow, background;
-}
-
-/* Use only .project-card:hover for hover effect */
-.project-card:hover {
-    transform: translateY(-8px);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    z-index: 2;
 }
 
 /* Floating Animation */
@@ -67,6 +68,12 @@
             transform: none;
         }
     }
+
+    .animate-fadeInUp {
+        opacity: 0;
+        transform: translateY(40px);
+        animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
     .custom-confirm-dialog {
     animation: confirmDialogFadeIn 0.3s ease-out;
 }
@@ -81,24 +88,7 @@
         transform: scale(1);
     }
 }
-    /* Project Card Specific Styles */
-    .project-card {
-        position: relative;
-        overflow: hidden;
-    }
-    .project-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    .project-card:hover::before {
-        left: 100%;
-    }
+    /* Project Card Specific Styles - moved to consolidated section below */
     /* Budget Status Indicators */
     .budget-status {
         padding: 0.5rem 1rem;
@@ -120,15 +110,14 @@
         color: rgb(16, 185, 129);
     }
 </style>
-<body class="min-h-screen px-4" style="background: #064e3b;">
-    
-    <!-- Desktop Navigation -->
-    <div class="desktop-nav">
-        @include('components.navigation', ['pageTitle' => 'Project Management'])
-    </div>
-    
+<body class="min-h-screen transition-all duration-300" style="background: #064e3b;">
+
+    <!-- Navigation -->
+    @include('components.navigation', ['pageTitle' => 'Project Management'])
+
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto mt-20">
+    <div class="main-content px-4 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
+    <div class="max-w-7xl mx-auto">
         <!-- Skeleton Summary Cards (shown while loading) -->
         <div id="skeletonSummaryCards" class="skeleton-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             <div class="skeleton-summary-card">
@@ -162,7 +151,7 @@
         </div>
         
         <!-- Summary Cards -->
-        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-5">
+        <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Projects -->
             <div class="glass-card card-delay-1 flex items-center p-6">
                 <div class="bg-green-100 text-green-600 rounded-full p-3 mr-4">
@@ -206,7 +195,7 @@
         </div>
 
         <!-- Search Bar and Controls -->
-        <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
+        <div class="animate-fadeInUp flex flex-col lg:flex-row justify-between items-center gap-4 mb-6" style="animation-delay: 0.20s;">
             <!-- Left Side: Search and Selection Controls -->
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                 <!-- Search Bar -->
@@ -224,12 +213,10 @@
 
                 <!-- Selection Controls -->
                 <div class="flex items-center gap-3">
-                    <button id="selectAllBtn" class="techy-btn bg-slate-600 hover:bg-slate-700 text-white px-4 py-1 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-10 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1">
-                        Select All
-                    </button>
-                    <button id="clearSelectionBtn" class="techy-btn bg-slate-600 hover:bg-slate-700 text-white px-4 py-1 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-10 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1">
-                        Clear
-                    </button>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="selectAllCheckbox" class="w-5 h-5 text-emerald-600 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-emerald-500 focus:ring-2">
+                        <span class="text-white font-semibold">Select All</span>
+                    </label>
 
                     <button id="trackRecordBtn" class="track-record-btn bg-slate-700 hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1" disabled>
                         Track Record (<span id="selectedCount">0</span>)
@@ -351,8 +338,8 @@
             </div>
         </div>
         
-        <!-- Projects Grid - Web Optimized -->
-        <div id="projectsGrid" class="grid grid-cols-1 xl:grid-cols-2 gap-10 mb-16 mt-4">
+        <!-- Projects Grid - Single Column for Wider Cards -->
+        <div id="projectsGrid" class="grid grid-cols-1 gap-6 mb-16 mt-4 max-w-6xl mx-auto">
             @forelse($projects as $project)
                 @php
                     $totalSpent = $project->totalSpentWithDetailedEngineering();
@@ -370,9 +357,9 @@
                         $cardClass .= ' border-green-400 bg-green-900 bg-opacity-10';
                     }
                 @endphp
-                <div class="glass-card card-delay-1 p-6 relative project-card">
+                <div class="glass-card card-delay-1 p-4 relative project-card">
                     <!-- Project Header -->
-                    <div class="flex items-start mb-6">
+                    <div class="flex items-start mb-4">
                         <!-- Checkbox -->
                         <div class="mr-3 mt-1">
                             <input type="checkbox"
@@ -382,8 +369,8 @@
                         </div>
                         <!-- Centered Project Information -->
                         <div class="flex-1 text-center">
-                            <h3 class="text-2xl font-bold text-white mb-2 leading-tight project-name">{{ $project->name }}</h3>
-                            <div class="text-3xl font-bold text-green-200 mb-2">₱{{ number_format($project->budget) }}</div>
+                            <h3 class="text-xl font-bold text-white mb-1 leading-tight project-name">{{ $project->name }}</h3>
+                            <div class="text-2xl font-bold text-green-200 mb-1">₱{{ number_format($project->budget) }}</div>
                             <p class="text-gray-300 text-sm mb-1 fpp-code">F/P/P Code: {{ $project->fpp_code ?? 'Not Set' }}</p>
                             @if($project->projectEngineer)
                                 <div class="text-green-200 text-sm flex items-center justify-center">
@@ -414,7 +401,7 @@
                     @endif
 
                     <!-- Budget Details Grid -->
-                    <div class="grid grid-cols-3 gap-6 mb-6">
+                    <div class="grid grid-cols-3 gap-4 mb-4">
                         <div class="text-center bg-white bg-opacity-5 rounded-lg p-4">
                             <div class="text-2xl font-bold {{ $isOverBudget ? 'text-red-400' : 'text-white' }}">
                                 ₱{{ number_format($totalSpent) }}
@@ -478,11 +465,6 @@
                     @if(auth()->user()->is_admin)
                         <!-- Action Buttons - Admin Only -->
                         <div class="flex justify-center space-x-2 pt-4 border-t border-white border-opacity-20">
-                            <button class="add-expense-btn bg-teal-700 hover:bg-teal-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[120px] justify-center border border-teal-600 ease-in-out transform hover:-translate-y-1"
-                                    data-project-id="{{ $project->id }}"
-                                    data-project-name="{{ $project->name }}">
-                                <span>Add Expense</span>
-                            </button>
                             <button class="edit-project-btn bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-emerald-600 ease-in-out transform hover:-translate-y-1"
                                     data-project-id="{{ $project->id }}"
                                     data-project-name="{{ $project->name }}"
@@ -525,8 +507,59 @@
         </div>
     </div>
 
-    <!-- Back to Top Button -->
-    <button id="backToTopBtn" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3" onclick="scrollToTop()">
+    <!-- Add Expense Modal -->
+    <div id="addExpenseModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition" style="z-index: 10000;">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative animate-fadeInUp">
+            <button id="closeAddExpenseModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <span class="mr-2">💸</span> Add Expense
+            </h2>
+            <form id="expenseForm" class="space-y-4">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="project_id" id="expenseProjectId">
+                
+                <div>
+                    <label for="expenseDescription" class="block text-gray-700 font-semibold mb-1">Description</label>
+                    <input type="text" id="expenseDescription" name="description" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="expenseAmount" class="block text-gray-700 font-semibold mb-1">Amount (₱)</label>
+                        <input type="number" id="expenseAmount" name="amount" min="0.01" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                    </div>
+                    <div>
+                        <label for="expenseDate" class="block text-gray-700 font-semibold mb-1">Date</label>
+                        <input type="date" id="expenseDate" name="date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="expenseCategory" class="block text-gray-700 font-semibold mb-1">Category</label>
+                    <select id="expenseCategory" name="category" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                        <option value="materials">Materials</option>
+                        <option value="labor">Labor</option>
+                        <option value="fuel">Fuel/Oil/Equipment</option>
+                        <option value="miscellaneous">Miscellaneous & Contingencies</option>
+                        <option value="others">Others</option>
+                        <option value="salary">Salary</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelExpenseBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-6 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-800 border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                        <span>Add Expense</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Back to Top Button - Centered in main content area (accounting for sidebar) -->
+    <button id="backToTopBtn" class="fixed bottom-8 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3 pointer-events-auto" onclick="scrollToTop()" style="left: calc(50% + 128px); transform: translateX(-50%);">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
         </svg>
@@ -538,7 +571,7 @@
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative animate-fadeInUp">
             <button id="closeAddExpenseModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
             <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                <span class="mr-2"></span> Add Expense
+                <span class="mr-2">💰</span> Project Expenses
             </h2>
             <div id="expenseProjectInfo" class="bg-gray-100 rounded-lg p-3 mb-4">
                 <div class="text-sm text-gray-600">Project:</div>
@@ -546,29 +579,56 @@
             </div>
             <form id="addExpenseForm" class="space-y-4">
                 <input type="hidden" id="expenseProjectId" name="project_id">
-                <div>
-                    <label for="expenseDescription" class="block text-gray-700 font-semibold mb-1">Description</label>
-                    <select id="expenseDescription" name="description" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-                        <option value="">Select expense type...</option>
-                        <option value="Materials">Materials</option>
-                        <option value="Labor">Labor</option>
-                        <option value="Fuel/Oil/Equipment">Fuel/Oil/Equipment</option>
-                        <option value="Miscellaneous & Contingencies">Miscellaneous & Contingencies</option>
-                        <option value="Others">Others</option>
-                    </select>
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                
+                <!-- Materials -->
+                <div class="space-y-1">
+                    <label for="materialsAmount" class="block text-gray-700 font-semibold">Materials (₱)</label>
+                    <input type="number" id="materialsAmount" name="materials" min="0" step="0.01" 
+                           class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" 
+                           placeholder="0.00" value="0.00">
                 </div>
-                <div>
-                    <label for="expenseAmount" class="block text-gray-700 font-semibold mb-1">Amount</label>
-                    <input id="expenseAmount" name="amount" type="number" min="0.01" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required placeholder="0.00">
+                
+                <!-- Labor -->
+                <div class="space-y-1">
+                    <label for="laborAmount" class="block text-gray-700 font-semibold">Labor (₱)</label>
+                    <input type="number" id="laborAmount" name="labor" min="0" step="0.01" 
+                           class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" 
+                           placeholder="0.00" value="0.00">
                 </div>
-                <div>
-                    <label for="expenseDate" class="block text-gray-700 font-semibold mb-1">Date</label>
-                    <input id="expenseDate" name="date" type="date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                
+                <!-- Fuel/Oil/Equipment -->
+                <div class="space-y-1">
+                    <label for="fuelAmount" class="block text-gray-700 font-semibold">Fuel/Oil/Equipment (₱)</label>
+                    <input type="number" id="fuelAmount" name="fuel" min="0" step="0.01" 
+                           class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" 
+                           placeholder="0.00" value="0.00">
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" id="cancelExpenseBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">Cancel</button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-800 px-6 py-3 rounded-lg font-bold text-white border-2 border-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                        <span id="submitExpenseText">Add Expense</span>
+                
+                <!-- Miscellaneous & Contingencies -->
+                <div class="space-y-1">
+                    <label for="miscAmount" class="block text-gray-700 font-semibold">Miscellaneous & Contingencies (₱)</label>
+                    <input type="number" id="miscAmount" name="miscellaneous" min="0" step="0.01" 
+                           class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" 
+                           placeholder="0.00" value="0.00">
+                </div>
+                
+                <!-- Others -->
+                <div class="space-y-1">
+                    <label for="othersAmount" class="block text-gray-700 font-semibold">Others (₱)</label>
+                    <input type="number" id="othersAmount" name="others" min="0" step="0.01" 
+                           class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" 
+                           placeholder="0.00" value="0.00">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancelExpenseBtn" 
+                            class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="bg-green-600 hover:bg-green-800 px-6 py-3 rounded-lg font-bold text-white border-2 border-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                        <span id="submitExpenseText">Save Expenses</span>
                     </button>
                 </div>
             </form>
@@ -594,10 +654,8 @@
                 <label for="editExpenseAmount" class="block text-gray-700 font-semibold mb-1">Amount</label>
                 <input id="editExpenseAmount" name="amount" type="number" min="0.01" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required placeholder="0.00">
             </div>
-            <div>
-                <label for="editExpenseDate" class="block text-gray-700 font-semibold mb-1">Date</label>
-                <input id="editExpenseDate" name="date" type="date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-            </div>
+            <!-- Date field removed as requested -->
+            <input type="hidden" id="editExpenseDate" name="date" value="">
             <div class="flex justify-end space-x-3">
                 <button type="button" id="cancelEditExpenseBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">Cancel</button>
                 <button type="submit" class="bg-green-600 hover:bg-green-800 px-6 py-3 rounded-lg font-bold text-white border-2 border-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
@@ -620,25 +678,25 @@
                     <label for="projectName" class="block text-gray-700 font-semibold mb-1">Project Name</label>
                     <input id="projectName" name="name" type="text" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
                 </div>
-                <div>
-                    <label for="projectBudget" class="block text-gray-700 font-semibold mb-1">Budget Amount</label>
-                    <input id="projectBudget" name="budget" type="number" min="1" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                <div class="mb-4">
+                    <label for="projectBudget" class="block text-gray-700 font-semibold mb-1">Budget (₱)</label>
+                    <input type="number" id="projectBudget" name="budget" min="0.01" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="projectDate" class="block text-gray-700 font-semibold mb-1">Date</label>
+                    <input type="date" id="projectDate" name="project_date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
                 </div>
                 <div>
                     <label for="projectFppCode" class="block text-gray-700 font-semibold mb-1">F/P/P Code <span class="text-gray-500 text-sm">(Optional)</span></label>
                     <input id="projectFppCode" name="fpp_code" type="text" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Enter F/P/P code">
                 </div>
-                <div>
-                    <label for="projectEngineer" class="block text-gray-700 font-semibold mb-1">Assign Project Engineer <span class="text-gray-500 text-sm">(Optional)</span></label>
-                    <select id="projectEngineer" name="project_engineer_id" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500">
-                        <option value="">Select an engineer...</option>
-                        <!-- Engineers will be loaded here -->
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-3">
+                <div class="flex justify-end space-x-3 pt-2">
                     <button type="button" id="cancelProjectBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">Cancel</button>
-                    <button type="submit" class="px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-800 border-2 border-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                        <span id="submitBtnText">Add Project</span>
+                    <button type="button" id="saveAndAddExpenseBtn" class="px-6 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-800 border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center">
+                        <span>Proceed to Add Expense</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
                     </button>
                 </div>
             </form>
@@ -708,30 +766,25 @@
     </div>
 
     <style>
-<style>
-/* Enhanced Card Animations */
-.project-card {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-/* Enhanced Card Animations */
-.project-card {
+/* Apply dashboard-style hover effects to glass cards on project page */
+.glass-card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     border-radius: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: translateY(0);
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
     opacity: 1;
+    position: relative;
+    overflow: hidden;
 }
-.project-card:hover {
-    transform: translateY(-8px);
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+
+/* Dashboard-style hover effect - same as dashboard glass cards */
+.glass-card:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 12px 32px 0 #00c6ff55;
+    background: rgba(255,255,255,0.22);
 }
     transition: width 1s ease-in-out;
     border-radius: 999px;
@@ -817,6 +870,69 @@
         // Pass admin status to JavaScript
         const isUserAdmin = @json(auth()->user()->is_admin);
 
+        // Centralized Modal Management System
+        const ModalManager = {
+            modalStack: [],
+
+            // Register when a modal is opened
+            openModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    // Add to stack if not already there
+                    if (!this.modalStack.includes(modalId)) {
+                        this.modalStack.push(modalId);
+                    }
+                    console.log('Modal opened:', modalId, 'Stack:', this.modalStack);
+                }
+            },
+
+            // Register when a modal is closed
+            closeModal: function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal && !modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                    // Remove from stack
+                    const index = this.modalStack.indexOf(modalId);
+                    if (index > -1) {
+                        this.modalStack.splice(index, 1);
+                    }
+                    console.log('Modal closed:', modalId, 'Stack:', this.modalStack);
+                }
+            },
+
+            // Close the most recently opened modal
+            closeTopModal: function() {
+                if (this.modalStack.length > 0) {
+                    const topModalId = this.modalStack[this.modalStack.length - 1];
+                    this.closeModal(topModalId);
+                    return true;
+                }
+                return false;
+            }
+        };
+
+        // Single ESC key handler for all modals and search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // First priority: Close the most recently opened modal
+                const closed = ModalManager.closeTopModal();
+                if (closed) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                // Second priority: Clear search if no modals are open
+                const searchInput = document.getElementById('projectSearch');
+                if (searchInput && searchInput.value !== '') {
+                    searchInput.value = '';
+                    searchInput.dispatchEvent(new Event('input'));
+                    e.preventDefault();
+                }
+            }
+        });
+
         // Global variables
         let currentReceiptData = null;
 
@@ -841,7 +957,7 @@
 
 
         // Custom centered notification with blur effect
-        function showCenteredNotification(message, type = 'success', duration = 3000) {
+        function showCenteredNotification(message, type = 'success', duration = 1000) {
             // Create backdrop overlay with blur
             const overlay = document.createElement('div');
             overlay.className = 'notification-overlay';
@@ -853,7 +969,6 @@
                 height: 100%;
                 background: rgba(0, 0, 0, 0.3);
                 backdrop-filter: blur(6px);
-                -webkit-backdrop-filter: blur(6px);
                 z-index: 9998;
                 opacity: 0;
                 transition: opacity 0.3s ease;
@@ -922,12 +1037,12 @@
                     projectEngineers.forEach(engineer => {
                         const option = document.createElement('option');
                         option.value = engineer.id;
-                        option.textContent = `${engineer.name} - ${engineer.specialization || 'General'}`;
+                        option.textContent = `${engineer.name}`;
                         select.appendChild(option);
                     });
                 })
                 .catch(error => {
-                    console.error('Error loading engineers:', error);
+                    console.error('Error loading engineers:', error);   
                     // Fallback: show message in dropdown
                     const select = document.getElementById('projectEngineer');
                     select.innerHTML = '<option value="">No engineers available</option>';
@@ -941,7 +1056,7 @@
             projectForm.reset();
             document.getElementById('projectId').value = '';
             loadProjectEngineers(); // Load engineers when opening modal
-            addProjectModal.classList.remove('hidden');
+            ModalManager.openModal('addProjectModal');
         }
 
         // Open modal for editing project
@@ -959,12 +1074,12 @@
                 document.getElementById('projectEngineer').value = engineerId || '';
             }, 100); // Small delay to ensure options are loaded
 
-            addProjectModal.classList.remove('hidden');
+            ModalManager.openModal('addProjectModal');
         }
 
         // Close modal
         function closeModal() {
-            addProjectModal.classList.add('hidden');
+            ModalManager.closeModal('addProjectModal');
         }
 
         // Open expense modal
@@ -974,12 +1089,12 @@
             document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; // Set today's date
             addExpenseForm.reset();
             document.getElementById('expenseProjectId').value = projectId; // Reset clears this, so set it again
-            addExpenseModal.classList.remove('hidden');
+            ModalManager.openModal('addExpenseModal');
         }
 
         // Close expense modal
         function closeExpenseModal() {
-            addExpenseModal.classList.add('hidden');
+            ModalManager.closeModal('addExpenseModal');
         }
 
         // Event listeners
@@ -992,13 +1107,7 @@
         closeAddExpenseBtn.addEventListener('click', closeExpenseModal);
         cancelExpenseBtn.addEventListener('click', closeExpenseModal);
 
-        // Close modal on escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeExpenseModal();
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Edit project buttons
         document.querySelectorAll('.edit-project-btn').forEach(btn => {
@@ -1023,25 +1132,39 @@
 
         // Archive project buttons
         document.querySelectorAll('.archive-project-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 const id = this.dataset.projectId;
                 const name = this.dataset.projectName;
-                showCenteredConfirm(
-                    `Are you sure you want to archive "${name}"? Archived projects can be viewed in the Archive section.`,
-                    () => archiveProject(id, name)
-                );
+                console.log('Archive button clicked:', { id, name, isUserAdmin });
+
+                // Add a small delay to ensure the click event is fully processed
+                setTimeout(() => {
+                    showCenteredConfirm(
+                        `Are you sure you want to archive "${name}"? Archived projects can be viewed in the Archive section.`,
+                        () => archiveProject(id, name)
+                    );
+                }, 10);
             });
         });
 
         // Delete project buttons
         document.querySelectorAll('.delete-project-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 const id = this.dataset.projectId;
                 const name = this.dataset.projectName;
-                showCenteredConfirm(
-                    `Are you sure you want to delete "${name}"? You can restore it from Recently Deleted if needed.`,
-                    () => deleteProject(id, name)
-                );
+                console.log('Delete button clicked:', { id, name, isUserAdmin });
+
+                // Add a small delay to ensure the click event is fully processed
+                setTimeout(() => {
+                    showCenteredConfirm(
+                        `Are you sure you want to delete "${name}"? You can restore it from Recently Deleted if needed.`,
+                        () => deleteProject(id, name)
+                    );
+                }, 10);
             });
         });
 
@@ -1090,11 +1213,11 @@
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error saving project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error saving project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error saving project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 hideButtonLoading(submitButton, originalText);
@@ -1145,11 +1268,11 @@
                         errorMessage = Object.values(errorData.errors).flat().join(', ');
                     }
 
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error adding expense. Please try again.', 'error', 4000);
+                showCenteredNotification('Error adding expense. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 hideButtonLoading(submitButton, originalText);
@@ -1158,9 +1281,16 @@
 
         // Archive project function
         async function archiveProject(id, name) {
+            console.log('archiveProject function called:', { id, name, isUserAdmin });
+
+            if (!isUserAdmin) {
+                showCenteredNotification('You do not have permission to archive projects.', 'error', 1000);
+                return;
+            }
+
             const archiveButton = document.querySelector(`[data-project-id="${id}"].archive-project-btn`);
             const originalText = archiveButton ? archiveButton.textContent : 'Archive';
-            
+
             try {
                 // Show loading spinner on archive button
                 if (archiveButton) {
@@ -1181,7 +1311,7 @@
                     console.log('Success:', data.message);
 
                     // Show centered success message
-                    showCenteredNotification(data.message, 'success', 4000);
+                    showCenteredNotification(data.message, 'success', 1000);
 
                     // Reload page
                     setTimeout(() => {
@@ -1190,11 +1320,11 @@
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error archiving project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error archiving project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error archiving project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 if (archiveButton) {
@@ -1205,9 +1335,16 @@
 
         // Delete project function
         async function deleteProject(id, name) {
+            console.log('deleteProject function called:', { id, name, isUserAdmin });
+
+            if (!isUserAdmin) {
+                showCenteredNotification('You do not have permission to delete projects.', 'error', 1000);
+                return;
+            }
+
             const deleteButton = document.querySelector(`[data-project-id="${id}"].delete-project-btn`);
             const originalText = deleteButton ? deleteButton.textContent : 'Delete';
-            
+
             try {
                 // Show loading spinner on delete button
                 if (deleteButton) {
@@ -1229,7 +1366,7 @@
                     console.log('Success:', data.message);
 
                     // Show centered deletion message (red color for deletion)
-                    showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 4000);
+                    showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 1000);
 
                     // Reload page
                     setTimeout(() => {
@@ -1238,11 +1375,11 @@
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error deleting project. Please try again.';
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    showCenteredNotification(errorMessage, 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification('Error deleting project. Please try again.', 'error', 4000);
+                showCenteredNotification('Error deleting project. Please try again.', 'error', 1000);
             } finally {
                 // Hide loading spinner
                 if (deleteButton) {
@@ -1299,24 +1436,33 @@
 
         // Project Selection functionality
         const projectCheckboxes = document.querySelectorAll('.project-checkbox');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         const trackRecordBtn = document.getElementById('trackRecordBtn');
         const selectedCountSpan = document.getElementById('selectedCount');
         const trackRecordModal = document.getElementById('trackRecordModal');
         const closeTrackRecordBtn = document.getElementById('closeTrackRecordModal');
 
-        // Update selected count and button state
+        // Update selected count and checkbox state
         function updateSelectionState() {
             const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
             const count = selectedCheckboxes.length;
+            const totalCheckboxes = projectCheckboxes.length;
 
             selectedCountSpan.textContent = count;
             trackRecordBtn.disabled = count === 0;
 
+            // Update select all checkbox state
             if (count === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
                 trackRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (count === totalCheckboxes) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+                trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true; // Show indeterminate state for partial selection
                 trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
@@ -1326,21 +1472,17 @@
             checkbox.addEventListener('change', updateSelectionState);
         });
 
-        // Select All functionality
-        selectAllBtn.addEventListener('click', function() {
+        // Select All Checkbox functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+
+            // Set all project checkboxes to match the select all checkbox
             projectCheckboxes.forEach(checkbox => {
-                checkbox.checked = true;
+                checkbox.checked = isChecked;
             });
+
             updateSelectionState();
         });
-
-                   // Clear Selection functionality
-            clearSelectionBtn.addEventListener('click', function() {
-                projectCheckboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-                updateSelectionState();
-            });
 
 
         // Global variable to store currently selected projects
@@ -1361,16 +1503,10 @@
 
         // Close track record modal
         closeTrackRecordBtn.addEventListener('click', function() {
-            trackRecordModal.classList.add('hidden');
+            ModalManager.closeModal('trackRecordModal');
         });
 
-        // Close modal on escape key
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                trackRecordModal.classList.add('hidden');
-                document.getElementById('editExpenseModal').classList.add('hidden');
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Edit Expense Modal functionality
         const editExpenseModal = document.getElementById('editExpenseModal');
@@ -1381,13 +1517,13 @@
         // Close edit expense modal (only for admins)
         if (closeEditExpenseBtn) {
             closeEditExpenseBtn.addEventListener('click', function() {
-                editExpenseModal.classList.add('hidden');
+                ModalManager.closeModal('editExpenseModal');
             });
         }
 
         if (cancelEditExpenseBtn) {
             cancelEditExpenseBtn.addEventListener('click', function() {
-                editExpenseModal.classList.add('hidden');
+                ModalManager.closeModal('editExpenseModal');
             });
         }
 
@@ -1427,7 +1563,7 @@
             await updateExpense(expenseId, description, amount, date, projectId);
 
             // Close modal
-            editExpenseModal.classList.add('hidden');
+            ModalManager.closeModal('editExpenseModal');
             });
         }
 
@@ -1447,8 +1583,8 @@
                 document.getElementById('selectedProjectsInfo').textContent =
                     `Selected Projects: ${selectedProjects.length}`;
 
-                // Show modal
-                trackRecordModal.classList.remove('hidden');
+                // Show modal using modal manager
+                ModalManager.openModal('trackRecordModal');
 
                 // Show loading spinner while fetching data
                 const modalContent = document.getElementById('projectsContainer');
@@ -1607,13 +1743,18 @@ setTimeout(() => {
 
 // Ensure editExpense is globally available
 window.editExpense = function(expenseId, description, amount, date, projectId) {
+    console.log('Setting up edit form with date:', date);
     document.getElementById('editExpenseId').value = expenseId;
     document.getElementById('editExpenseDescription').value = description;
     document.getElementById('editExpenseAmount').value = amount;
-    document.getElementById('editExpenseDate').value = date;
+    // Set the hidden date field value
+    const dateInput = document.getElementById('editExpenseDate');
+    dateInput.value = date;
+    // Store the original date in a data attribute in case we need it
+    dateInput.dataset.originalDate = date;
     document.getElementById('editExpenseForm').dataset.projectId = projectId;
 
-    document.getElementById('editExpenseModal').classList.remove('hidden');
+    ModalManager.openModal('editExpenseModal');
 };
 
 // Edit Expense Modal functionality
@@ -1623,7 +1764,7 @@ const cancelEditExpenseBtn = document.getElementById('cancelEditExpenseBtn');
 const editExpenseForm = document.getElementById('editExpenseForm');
 
 function closeEditExpenseModalAndRestore() {
-    editExpenseModal.classList.add('hidden');
+    ModalManager.closeModal('editExpenseModal');
     editExpenseForm.reset();
 }
 if (closeEditExpenseBtn) closeEditExpenseBtn.addEventListener('click', closeEditExpenseModalAndRestore);
@@ -1641,11 +1782,15 @@ if (editExpenseForm) {
         const submitBtn = editExpenseForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span>Updating...';
-        await updateExpense(expenseId, description, amount, date, projectId);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        closeEditExpenseModalAndRestore();
+        submitBtn.innerHTML = '<span class="animate-spin mr-2"></span>Updating...';
+        updateExpense(expenseId, description, amount, date, projectId)
+            .then(() => {
+                closeEditExpenseModalAndRestore();
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
     });
 }
 
@@ -1668,8 +1813,8 @@ if (editExpenseForm) {
                 const modalContent = document.getElementById('projectsContainer');
                 hideOverlayLoading(modalContent);
                 
-                showCenteredNotification('Error loading project track records. Please try again.', 'error', 4000);
-                trackRecordModal.classList.add('hidden');
+                showCenteredNotification('Error loading project track records. Please try again.', 'error', 1000);
+                ModalManager.closeModal('trackRecordModal');
             }
         }
 
@@ -1727,7 +1872,7 @@ if (editExpenseForm) {
             document.getElementById('editExpenseForm').dataset.projectId = projectId;
 
             // Show the edit modal
-            document.getElementById('editExpenseModal').classList.remove('hidden');
+            ModalManager.openModal('editExpenseModal');
         }
 
         // Delete expense function
@@ -1737,9 +1882,16 @@ if (editExpenseForm) {
             }
         }
 
+        // Track if a notification is currently being shown
+        let isNotificationActive = false;
+
         // Update expense API call
         async function updateExpense(expenseId, description, amount, date, projectId) {
+            // Prevent multiple notifications
+            if (isNotificationActive) return;
+            
             try {
+                isNotificationActive = true;
                 console.log('Updating expense:', { expenseId, description, amount, date, projectId });
 
                 const response = await fetch(`{{ url('/expenses') }}/${expenseId}`, {
@@ -1762,11 +1914,15 @@ if (editExpenseForm) {
                 if (response.ok) {
                     const result = await response.json();
                     console.log('Update successful:', result);
-                    showCenteredNotification('Expense updated successfully!', 'success', 3000);
-                    // Refresh the track record modal
+                    
+                    // Show success notification
+                    showCenteredNotification('Expense updated successfully!', 'success', 1000);
+                    
+                    // Refresh the track record modal with minimal delay
                     setTimeout(() => {
                         openMultipleTrackRecordModal(currentSelectedProjects);
-                    }, 1000);
+                        isNotificationActive = false;
+                    }, 50); // Reduced from 1000ms to 300ms for faster updates
                 } else {
                     const errorText = await response.text();
                     console.error('Update failed:', response.status, errorText);
@@ -1778,11 +1934,17 @@ if (editExpenseForm) {
                         // If not JSON, use the text as error message
                         errorMessage = errorText || errorMessage;
                     }
-                    showCenteredNotification(errorMessage, 'error', 4000);
+                    if (!isNotificationActive) {
+                        showCenteredNotification(errorMessage, 'error', 1000);
+                    }
+                    isNotificationActive = false;
                 }
             } catch (error) {
                 console.error('Error updating expense:', error);
-                showCenteredNotification('Error updating expense. Please try again.', 'error', 4000);
+                if (!isNotificationActive) {
+                    showCenteredNotification('Error updating expense. Please try again.', 'error', 1000);
+                }
+                isNotificationActive = false;
             }
         }
 
@@ -1798,18 +1960,18 @@ if (editExpenseForm) {
                 });
 
                 if (response.ok) {
-                    showCenteredNotification('Expense deleted successfully!', 'success', 3000);
+                    showCenteredNotification('Expense deleted successfully!', 'success', 1000);
                     // Refresh the track record modal
                     setTimeout(() => {
                         openMultipleTrackRecordModal(currentSelectedProjects);
                     }, 1000);
                 } else {
                     const errorData = await response.json().catch(() => ({}));
-                    showCenteredNotification(errorData.message || 'Error deleting expense', 'error', 4000);
+                    showCenteredNotification(errorData.message || 'Error deleting expense', 'error', 1000);
                 }
             } catch (error) {
                 console.error('Error deleting expense:', error);
-                showCenteredNotification('Error deleting expense. Please try again.', 'error', 4000);
+                showCenteredNotification('Error deleting expense. Please try again.', 'error', 1000);
             }
         }
 
@@ -1840,7 +2002,7 @@ if (editExpenseForm) {
                 </div>
             `;
 
-            receiptModal.classList.remove('hidden');
+            ModalManager.openModal('receiptModal');
             console.log('Receipt modal opened');
 
             // Load receipt content
@@ -1943,7 +2105,7 @@ if (editExpenseForm) {
         }
 
         function closeReceiptModal() {
-            document.getElementById('receiptModal').classList.add('hidden');
+            ModalManager.closeModal('receiptModal');
             currentReceiptData = null;
         }
 
@@ -2024,12 +2186,7 @@ if (editExpenseForm) {
             }
         });
 
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !document.getElementById('receiptModal').classList.contains('hidden')) {
-                closeReceiptModal();
-            }
-        });
+        // ESC handler removed - using centralized modal manager
 
         // Close button event listener
         document.getElementById('closeReceiptModal').addEventListener('click', closeReceiptModal);
@@ -2087,7 +2244,7 @@ if (editExpenseForm) {
             }
         });
 
-        // Minimal keyboard shortcuts (Ctrl+K and Esc)
+        // Keyboard shortcuts (Ctrl+K for search)
         document.addEventListener('keydown', function(e) {
             // Ctrl+K or Cmd+K for quick search
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -2099,32 +2256,7 @@ if (editExpenseForm) {
                 }
                 return;
             }
-            
-            // Esc to close modals or clear search
-            if (e.key === 'Escape') {
-                // First priority: Close any open modals
-                const openModals = [
-                    document.getElementById('addProjectModal'),
-                    document.getElementById('addExpenseModal'),
-                    document.getElementById('editSalariesModal'),
-                    document.getElementById('trackRecordModal'),
-                    document.getElementById('receiptModal'),
-                    document.getElementById('editExpenseModal'),
-                    document.getElementById('customConfirmOverlay')
-                ].filter(modal => modal && !modal.classList.contains('hidden'));
-                
-                if (openModals.length > 0) {
-                    openModals[0].classList.add('hidden');
-                    return;
-                }
-                
-                // Second priority: Clear search if no modals are open
-                const searchInput = document.getElementById('projectSearch');
-                if (searchInput && searchInput.value !== '') {
-                    searchInput.value = '';
-                    searchInput.dispatchEvent(new Event('input'));
-                }
-            }
+            // ESC handling removed - using centralized modal manager only
         });
         
         // Mobile Navigation and Sidebar Functionality
@@ -2177,10 +2309,12 @@ if (editExpenseForm) {
         let touchEndY = 0;
         let currentSwipeCard = null;
         
+        // Hover effects disabled for project cards
+
         // Add touch event listeners to project cards
         function addSwipeListeners() {
             const projectCards = document.querySelectorAll('.project-card');
-            
+
             projectCards.forEach(card => {
                 // Add swipe indicator for mobile
                 if (window.innerWidth <= 768 && !card.querySelector('.swipe-indicator')) {
@@ -2547,6 +2681,386 @@ if (editExpenseForm) {
             }
         }
         
+        // Function to open Add Expense modal for a project
+        function openAddExpenseModal(projectId, projectName) {
+            console.log('Opening Add Expense modal for project:', projectId, projectName);
+            
+            // Set the project ID in the expense form
+            const expenseForm = document.getElementById('expenseForm');
+            const expenseProjectId = document.getElementById('expenseProjectId');
+            const expenseProjectName = document.getElementById('expenseProjectName');
+            
+            if (expenseForm && expenseProjectId && expenseProjectName) {
+                // Set the project ID in the hidden input
+                expenseProjectId.value = projectId;
+                
+                // Update the project name display
+                expenseProjectName.textContent = projectName;
+                
+                // Ensure the expense form has the correct action URL
+                expenseForm.action = `/projects/${projectId}/expenses`;
+                
+                // Reset the form and set today's date
+                expenseForm.reset();
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('expenseDate').value = today;
+                
+                // Open the modal with a slight delay to ensure smooth transition
+                setTimeout(() => {
+                    ModalManager.openModal('addExpenseModal');
+                    
+                    // Focus on the first input field for better UX
+                    const firstInput = expenseForm.querySelector('input:not([type="hidden"]), select');
+                    if (firstInput) {
+                        firstInput.focus();
+                    }
+                }, 100);
+            } else {
+                console.error('Expense form elements not found');
+                showCenteredNotification('Could not open expense form. Please try again.', 'error', 3000);
+            }
+        }
+        
+        // Function to save project and open expense modal
+        async function saveAndOpenExpense() {
+            const form = document.getElementById('projectForm');
+            const formData = new FormData(form);
+            const url = form.action || '/projects';
+            const method = form.dataset.method || 'POST';
+            
+            try {
+                const submitBtn = document.getElementById('saveAndAddExpenseBtn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
+                
+                // Convert FormData to JSON object
+                const jsonData = {};
+                formData.forEach((value, key) => {
+                    jsonData[key] = value;
+                });
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Close the current modal
+                    ModalManager.closeModal('addProjectModal');
+                    
+                    // Show success message
+                    showCenteredNotification('Project saved successfully!', 'success', 2000);
+                    
+                    // Open the add expense modal for the new project after a short delay
+                    setTimeout(() => {
+                        openAddExpenseModal(data.project.id, data.project.name);
+                    }, 500);
+                } else {
+                    throw new Error(data.message || 'Failed to save project');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 3000);
+            } finally {
+                // Reset button state
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        }
+        
+        // Add event listeners for the Add Expense modal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add Project Modal
+            const openAddProjectBtn = document.getElementById('openAddProjectModal');
+            const closeAddProjectBtn = document.getElementById('closeAddProjectModal');
+            const cancelProjectBtn = document.getElementById('cancelProjectBtn');
+            
+            if (openAddProjectBtn) {
+                openAddProjectBtn.addEventListener('click', function() {
+                    ModalManager.openModal('addProjectModal');
+                    // Set today's date as default
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('projectDate').value = today;
+                });
+            }
+            
+            if (closeAddProjectBtn) {
+                closeAddProjectBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('addProjectModal');
+                });
+            }
+            
+            if (cancelProjectBtn) {
+                cancelProjectBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('addProjectModal');
+                });
+            }
+            
+            // Close modal when clicking outside
+            const addProjectModal = document.getElementById('addProjectModal');
+            if (addProjectModal) {
+                addProjectModal.addEventListener('click', function(e) {
+                    if (e.target === addProjectModal) {
+                        ModalManager.closeModal('addProjectModal');
+                    }
+                });
+            }
+            
+            // Close modal buttons
+            const closeAddExpenseBtn = document.getElementById('closeAddExpenseModal');
+            const cancelExpenseBtn = document.getElementById('cancelExpenseBtn');
+            const addExpenseForm = document.getElementById('expenseForm');
+            
+            if (closeAddExpenseBtn) {
+                closeAddExpenseBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('addExpenseModal');
+                });
+            }
+            
+            if (cancelExpenseBtn) {
+                cancelExpenseBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('addExpenseModal');
+                });
+            }
+            
+            // Handle form submission
+            if (addExpenseForm) {
+                addExpenseForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(addExpenseForm);
+                    const submitBtn = addExpenseForm.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    try {
+                        // Show loading state
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Adding...';
+                        
+                        const response = await fetch('/expenses', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            showCenteredNotification('Expense added successfully!', 'success', 3000);
+                            addExpenseForm.reset();
+                            ModalManager.closeModal('addExpenseModal');
+                            
+                            // Refresh the page to show the new expense
+                            window.location.reload();
+                        } else {
+                            throw new Error(data.message || 'Failed to add expense');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showCenteredNotification(error.message || 'An error occurred while adding the expense', 'error', 3000);
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                });
+            }
+            
+            // Function to save project and open Add Expense modal
+        async function saveAndOpenExpense() {
+            const form = document.getElementById('projectForm');
+            if (!form) {
+                console.error('Project form not found');
+                showCenteredNotification('Error: Project form not found', 'error', 3000);
+                return;
+            }
+
+            const submitBtn = document.querySelector('#saveAndAddExpenseBtn');
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+            
+            try {
+                // Show loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '&lt;span class="animate-spin mr-2"&gt;⏳&lt;/span&gt; Saving...';
+                }
+                
+                // Create FormData and convert to plain object
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+                
+                // Send the request
+                const response = await fetch(form.action || '/projects', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const responseData = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(responseData.message || 'Failed to save project');
+                }
+                
+                // Show success message
+                showCenteredNotification('Project saved successfully!', 'success', 2000);
+                
+                // Close the project modal and open the expense modal
+                ModalManager.closeModal('addProjectModal');
+                
+                // Small delay for better UX
+                setTimeout(() => {
+                    openAddExpenseModal(responseData.project.id, responseData.project.name);
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error saving project:', error);
+                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 3000);
+            } finally {
+                // Reset button state
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+            }
+        }
+        
+        // Event delegation for Proceed to Add Expense button
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.matches('#saveAndAddExpenseBtn, #saveAndAddExpenseBtn *')) {
+                e.preventDefault();
+                const form = document.getElementById('projectForm');
+                if (form && form.checkValidity()) {
+                    saveAndOpenExpense();
+                } else if (form) {
+                    form.reportValidity();
+                }
+            }
+        });
+        
+        // Initialize expense form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const expenseForm = document.getElementById('addExpenseForm');
+            if (!expenseForm) return;
+            
+            // Format amount inputs to 2 decimal places on blur
+            expenseForm.addEventListener('blur', function(e) {
+                if (e.target.matches('input[type="number"]')) {
+                    if (e.target.value && e.target.value.trim() !== '') {
+                        e.target.value = parseFloat(e.target.value).toFixed(2);
+                    }
+                }
+            }, true);
+            
+            // Handle form submission
+            expenseForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Get all amount inputs
+                const amountInputs = this.querySelectorAll('input[type="number"]');
+                let hasAmount = false;
+                
+                // Check if at least one amount is greater than 0
+                amountInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    if (value > 0) hasAmount = true;
+                });
+                
+                if (!hasAmount) {
+                    showCenteredNotification('Please enter at least one expense amount', 'error', 3000);
+                    return;
+                }
+                
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+                
+                try {
+                    // Show loading state
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
+                    }
+                    
+                    // Prepare form data
+                    const formData = new FormData(this);
+                    
+                    // Send the request
+                    const response = await fetch('/expenses', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showCenteredNotification('Expenses saved successfully!', 'success', 3000);
+                        
+                        // Reset form and close modal
+                        this.reset();
+                        ModalManager.closeModal('addExpenseModal');
+                        
+                        // Reload the page to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    } else {
+                        throw new Error(data.message || 'Failed to save expenses');
+                    }
+                } catch (error) {
+                    console.error('Error saving expenses:', error);
+                    showCenteredNotification(error.message || 'An error occurred while saving expenses', 'error', 3000);
+                } finally {
+                    // Reset button state
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                }
+            });
+            
+            // Close modal when clicking cancel
+            const cancelBtn = document.getElementById('cancelExpenseBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('addExpenseModal');
+                });
+            }
+            
+            // Close modal when clicking outside the modal content
+            const modal = document.getElementById('addExpenseModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        ModalManager.closeModal('addExpenseModal');
+                    }
+                });
+            }
+        });
+        });
+        
         // Initialize skeleton loader
         const skeletonLoader = new SkeletonLoader();
         
@@ -2638,62 +3152,135 @@ if (editExpenseForm) {
 
         // --- Helper for showing the modal using the new HTML structure ---
 function showCenteredConfirm(message, onConfirm, onCancel = null) {
-    const overlay = document.getElementById('customConfirmOverlay');
-    const msg = document.getElementById('customConfirmMessage');
-    const btnOk = document.getElementById('customConfirmOk');
-    const btnCancel = document.getElementById('customConfirmCancel');
+    console.log('showCenteredConfirm called with message:', message);
 
-    msg.textContent = message;
-    overlay.classList.remove('hidden');
+    // Create a completely isolated confirmation dialog
+    const confirmDialog = document.createElement('div');
+    confirmDialog.id = 'isolatedConfirmDialog';
+    confirmDialog.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    `;
 
-    // Remove previous listeners
-    btnOk.onclick = null;
-    btnCancel.onclick = null;
-    overlay.onclick = null;
+    const dialogBox = document.createElement('div');
+    dialogBox.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: confirmDialogFadeIn 0.3s ease-out;
+    `;
 
-    btnOk.onclick = function() {
-        overlay.classList.add('hidden');
-        if (onConfirm) onConfirm();
-    };
-    btnCancel.onclick = function() {
-        overlay.classList.add('hidden');
+    dialogBox.innerHTML = `
+        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+            <div style="font-size: 24px; margin-right: 12px;">⚠️</div>
+            <h3 style="font-size: 18px; font-weight: 600; color: #374151; margin: 0;">Confirm Action</h3>
+        </div>
+        <p style="color: #6b7280; margin-bottom: 24px; line-height: 1.5;">${message}</p>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button id="isolatedCancelBtn" style="
+                padding: 8px 16px;
+                background: #e5e7eb;
+                color: #374151;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            ">Cancel</button>
+            <button id="isolatedConfirmBtn" style="
+                padding: 8px 16px;
+                background: #ef4444;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.2s;
+            ">Confirm</button>
+        </div>
+    `;
+
+    confirmDialog.appendChild(dialogBox);
+    document.body.appendChild(confirmDialog);
+
+    // Add hover effects
+    const cancelBtn = dialogBox.querySelector('#isolatedCancelBtn');
+    const confirmBtn = dialogBox.querySelector('#isolatedConfirmBtn');
+
+    cancelBtn.addEventListener('mouseenter', () => {
+        cancelBtn.style.backgroundColor = '#d1d5db';
+    });
+    cancelBtn.addEventListener('mouseleave', () => {
+        cancelBtn.style.backgroundColor = '#e5e7eb';
+    });
+
+    confirmBtn.addEventListener('mouseenter', () => {
+        confirmBtn.style.backgroundColor = '#dc2626';
+    });
+    confirmBtn.addEventListener('mouseleave', () => {
+        confirmBtn.style.backgroundColor = '#ef4444';
+    });
+
+    function closeDialog() {
+        if (confirmDialog && confirmDialog.parentNode) {
+            confirmDialog.parentNode.removeChild(confirmDialog);
+        }
+    }
+
+    // Event handlers
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Cancel button clicked');
+        closeDialog();
         if (onCancel) onCancel();
-    };
-    overlay.onclick = function(e) {
-        if (e.target === overlay) {
-            overlay.classList.add('hidden');
+    });
+
+    confirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Confirm button clicked');
+        closeDialog();
+        if (onConfirm) onConfirm();
+    });
+
+    // Close on overlay click
+    confirmDialog.addEventListener('click', (e) => {
+        if (e.target === confirmDialog) {
+            console.log('Overlay clicked, closing dialog');
+            closeDialog();
             if (onCancel) onCancel();
         }
+    });
+
+    // ESC key handler
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            console.log('ESC pressed, closing confirmation dialog');
+            closeDialog();
+            if (onCancel) onCancel();
+            document.removeEventListener('keydown', escHandler);
+        }
     };
+    document.addEventListener('keydown', escHandler);
+
+    console.log('Isolated confirmation dialog created and shown');
 }
 
-// --- Archive Button Handler ---
-document.querySelectorAll('.archive-project-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const projectId = this.dataset.projectId;
-        const projectName = this.dataset.projectName;
-        showCenteredConfirm(
-            `Are you sure you want to archive "${projectName}"? Archived projects can be viewed in the Archive section.`,
-            function() {
-                archiveProject(projectId, projectName); // <--- Use the robust async function!
-            }
-        );
-    });
-});
-
-// --- Delete Button Handler ---
-document.querySelectorAll('.delete-project-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const projectId = this.dataset.projectId;
-        const projectName = this.dataset.projectName;
-        showCenteredConfirm(
-            `Are you sure you want to delete "${projectName}"? You can restore it from Recently Deleted if needed.`,
-            function() {
-                deleteProject(projectId, projectName); // <--- Use the robust async function!
-            }
-        );
-    });
-});
+// Archive and Delete button handlers are already defined above in the main initialization section
 
     </script>
 
@@ -2829,7 +3416,7 @@ function performAjaxWithLoading(options) {
 
 function openEditSalariesModal(projectId) {
     window.currentEditSalariesProjectId = projectId;
-    document.getElementById('editSalariesModal').classList.remove('hidden');
+    ModalManager.openModal('editSalariesModal');
     fetch(`/projects/${projectId}/team-salaries`)
         .then(res => res.json())
         .then(data => {
@@ -2937,7 +3524,7 @@ function openEditSalariesModal(projectId) {
 }
 
 function closeEditSalariesModal() {
-    document.getElementById('editSalariesModal').classList.add('hidden');
+    ModalManager.closeModal('editSalariesModal');
     // After closing salaries modal, refresh track record if open and this project is selected
     if (typeof trackRecordModal !== 'undefined' && !trackRecordModal.classList.contains('hidden') &&
         typeof currentSelectedProjects !== 'undefined' &&
@@ -2967,27 +3554,6 @@ function closeEditSalariesModal() {
     </div>
 </div>
 
-<!-- Edit Salaries Modal -->
-<div id="editSalariesModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
-    <div class="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl relative">
-        <h2 class="text-xl font-bold mb-4">Edit Detailed Engineering Salaries</h2>
-        <table class="min-w-full mb-4">
-            <thead>
-                <tr>
-                    <th class="text-left p-2">Name</th>
-                    <th class="text-left p-2">Salary</th>
-                    <th class="text-left p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="salariesTableBody">
-                <!-- Populated by JS -->
-            </tbody>
-        </table>
-        <button onclick="closeEditSalariesModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Close</button>
-        <button onclick="closeEditSalariesModal()" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 text-xl">&times;</button>
-    </div>
-</div>
-
+    </div> <!-- Close main content div -->
 </body>
 </html>
-

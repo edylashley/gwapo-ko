@@ -465,6 +465,20 @@
                 ['Remaining:', "₱{{ number_format($summary['remaining_budget'], 2) }}"],
                 ['Usage:', "{{ number_format($summary['percent_used'], 1) }}%"],
                 [''],
+                // Engineer Assignments Section
+                ['ENGINEER ASSIGNMENTS'],
+                @if($project->projectEngineer)
+                    ['Project Engineer:', "{{ $project->projectEngineer->name }}"],
+                    @if($project->projectEngineer->specialization)
+                        ['Specialization:', "{{ $project->projectEngineer->specialization }}"],
+                    @endif
+                @else
+                    ['Project Engineer:', 'Not assigned'],
+                @endif
+                @if(isset($teamSummary) && $teamSummary)
+                    ['Team Summary:', "{{ $teamSummary }}"],
+                @endif
+                [''],
                 ['EXPENSE DETAILS'],
                 ['#', 'Date', 'Description', 'Amount', 'Running Balance']
             ];

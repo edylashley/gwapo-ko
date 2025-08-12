@@ -5,21 +5,48 @@
     <title>Edit User - {{ $user->name }} - Budget Control</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .glass-card {
+            background: white;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: transform 0.3s, box-shadow 0.3s;
+            opacity: 0;
+            transform: translateY(40px);
+            animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 32px 0 rgba(0, 198, 255, 0.1);
+        }
+        .card-delay-1 { animation-delay: 0.15s; }
+    </style>
 </head>
 <body style="background: #064e3b;" class="min-h-screen px-4 py-10" style="background: linear-gradient(135deg, #064e3b, #065f46, #10b981, #059669);">
     <!-- Navigation -->
     @include('components.navigation', ['pageTitle' => 'Edit User'])
 
     <!-- Main Content -->
-    <div class="pt-20">
-        <div class="max-w-4xl mx-auto">
+    <div class="main-content px-4 pt-10 pb-10 transition-all duration-300" id="mainContent">
+        <div class="max-w-5xl mx-auto">
             
             <!-- Header Section -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 mb-8 overflow-hidden">
+            <div class="glass-card overflow-hidden mb-8">
                 <div class="bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-700 px-8 py-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-green-600 font-bold text-lg mr-4 shadow-lg">
+                            <div class="w-12 h-12 bg-gray-600 bg-opacity-20 rounded-full flex items-center justify-center text-green-600 font-bold text-lg mr-4 shadow-lg">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                             </div>
                             <div>
@@ -68,7 +95,7 @@
             @endif
 
             <!-- Edit User Form -->
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div class="glass-card overflow-hidden card-delay-1">
                 <form action="{{ route('users.update', $user) }}" method="POST" class="p-8">
                     @csrf
                     @method('PUT')

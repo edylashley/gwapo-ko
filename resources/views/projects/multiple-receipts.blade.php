@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @media print {
@@ -29,6 +30,9 @@
         }
     </script>
     @endif
+    <script>
+        window.projectsSummaryData = @json($projectsData);
+    </script>
 </head>
 <body style="background: #064e3b;" class="bg-gray-100 min-h-screen py-8">
     <!-- Action Buttons (No Print) -->
@@ -348,37 +352,55 @@
                     $summary = $projectsData[0]['summary'];
                 @endphp
 
-                // Project details
-                data.push(['PROJECT: {{ $project->name }}']);
+                // Header
+                data.push(['PROJECT EXPENSE RECEIPT']);
+                data.push(['Budget Control System']);
+                data.push(['Generated on {{ now()->format('F d, Y \\a\\t g:i A') }}']);
                 data.push(['']);
-                data.push(['Project Details:']);
+                // Project Details
+                data.push(['Project Details']);
                 data.push(['Project Name:', '{{ $project->name }}']);
                 @if($project->fpp_code)
                     data.push(['F/P/P Code:', '{{ $project->fpp_code }}']);
                 @endif
                 data.push(['Created Date:', '{{ $project->created_at->format('F d, Y') }}']);
-                data.push(['Total Budget:', '₱{{ number_format($project->budget, 2) }}']);
+                data.push(['Total Budget:', '₱{{ number_format($summary['total_budget'], 2) }}']);
                 data.push(['']);
-                data.push(['Budget Summary:']);
+                // Budget Summary
+                data.push(['Budget Summary']);
+                data.push(['Direct Expenses:', '₱{{ number_format($summary['total_spent'], 2) }}']);
                 data.push(['Total Spent:', '₱{{ number_format($summary['total_spent'], 2) }}']);
                 data.push(['Remaining:', '₱{{ number_format($summary['remaining_budget'], 2) }}']);
                 data.push(['Usage:', '{{ number_format($summary['percent_used'], 1) }}%']);
+                data.push(['']);
+                // Engineer Assignments
+                data.push(['Engineer Assignments']);
+                @if($project->projectEngineer)
+                    data.push(['Project Engineer:', '{{ $project->projectEngineer->name }}']);
+                    @if($project->projectEngineer->specialization)
+                        data.push(['Specialization:', '{{ $project->projectEngineer->specialization }}']);
+                    @endif
+                @endif
+                @if(isset($teamSummary) && $teamSummary)
+                    data.push(['Team Summary:', '{{ $teamSummary }}']);
+                @endif
                 data.push(['']);
                 data.push(['EXPENSE DETAILS']);
                 data.push(['#', 'Date', 'Description', 'Amount', 'Running Balance']);
 
                 @if($expenses->count() > 0)
                     @php $runningBalance = $project->budget; @endphp
-                    @foreach($expenses as $expenseIndex => $expense)
-                        @php $runningBalance -= $expense->amount; @endphp
+                    @foreach($expenses as $i => $expense)
                         data.push([
-                            {{ $expenseIndex + 1 }},
-                            '{{ $expense->date->format('M d, Y') }}',
+                            {{ $i + 1 }},
+                            '{{ \Carbon\Carbon::parse($expense->date)->format('m-d-y') }}',
                             '{{ $expense->description }}',
                             '₱{{ number_format($expense->amount, 2) }}',
-                            '₱{{ number_format($runningBalance, 2) }}'
+                            '₱{{ number_format($runningBalance -= $expense->amount, 2) }}'
                         ]);
                     @endforeach
+                    // Grand total row
+                    data.push(['', '', 'GRAND TOTAL:', '₱{{ number_format($summary['total_spent'], 2) }}', '₱{{ number_format($summary['remaining_budget'], 2) }}']);
                 @else
                     data.push(['No expenses recorded']);
                 @endif
@@ -464,38 +486,80 @@
 
         // Download all projects as PDF
         function downloadAllPDF() {
-            const element = document.body;
-
-            html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true
-            }).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-
-                const imgWidth = 210;
-                const pageHeight = 295;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
+            @if(count($projectsData) == 1)
+                // Single project - use html2canvas + jsPDF as before
+                const element = document.body;
+                html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                    const imgWidth = 210;
+                    const pageHeight = 295;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
                     pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
                     heightLeft -= pageHeight;
-                }
-
-                @if(count($projectsData) == 1)
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
                     pdf.save('Project_Receipt.pdf');
-                @else
-                    pdf.save('Projects_Summary.pdf');
-                @endif
-            });
+                });
+            @else
+                // Multiple projects - use html2canvas to capture the summary table visually
+                const element = document.querySelector('.print-container'); // capture only the summary container
+                if (!element) {
+                    alert('Summary table not found!');
+                    return;
+                }
+                // Save original styles
+                const originalBoxShadow = element.style.boxShadow;
+                const originalBackground = element.style.background;
+                // Remove shadow and set background to white
+                element.style.boxShadow = 'none';
+                element.style.background = 'white';
+                html2canvas(element, {
+                    scale: 1,
+                    useCORS: true,
+                    allowTaint: true
+                }).then(canvas => {
+                    // Restore styles
+                    element.style.boxShadow = originalBoxShadow;
+                    element.style.background = originalBackground;
+                    try {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                        const imgWidth = 210;
+                        const pageHeight = 295;
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        let heightLeft = imgHeight;
+                        let position = 0;
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                        while (heightLeft > 0) {
+                            position = heightLeft - imgHeight;
+                            pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                            heightLeft -= pageHeight;
+                        }
+                        console.log('Saving PDF...');
+                        pdf.save('Projects_Summary.pdf');
+                        console.log('PDF saved.');
+                    } catch (err) {
+                        console.error('PDF generation failed:', err);
+                        alert('PDF generation failed: ' + err.message);
+                    }
+                }).catch(err => {
+                    console.error('html2canvas failed:', err);
+                    alert('Screenshot failed: ' + err.message);
+                });
+            @endif
         }
 
         // Function to go back to track records

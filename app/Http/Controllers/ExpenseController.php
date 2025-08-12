@@ -118,8 +118,38 @@ class ExpenseController extends Controller
             'changes' => $validated
         ]);
 
-        // Load the project relationship for the response
-        return response()->json($expense->fresh()->load('project'));
+        // Get the updated project with fresh data
+        $project = $expense->project->fresh();
+        
+        // Get all non-archived projects for summary data
+        $projects = \App\Models\Project::whereNull('archived_at')
+            ->whereNull('deleted_at')
+            ->get();
+            
+        $totalBudget = $projects->sum('budget');
+        $activeProjects = $projects->count();
+        $avgBudget = $activeProjects > 0 ? $projects->avg('budget') : 0;
+        
+        // Calculate project's remaining budget and percentage used
+        $projectSpent = $project->totalSpentWithDetailedEngineering();
+        $projectRemaining = max(0, $project->budget - $projectSpent);
+        $percentUsed = $project->budget > 0 ? min(100, ($projectSpent / $project->budget) * 100) : 0;
+
+        // Prepare the response with summary data
+        return response()->json([
+            'expense' => $expense->load('project'),
+            'summary' => [
+                'totalProjects' => $projects->count(),
+                'totalBudget' => $totalBudget,
+                'activeProjects' => $activeProjects,
+                'avgBudget' => $avgBudget,
+                'updatedProject' => [
+                    'id' => $project->id,
+                    'remaining_budget' => $projectRemaining,
+                    'percent_used' => $percentUsed
+                ]
+            ]
+        ]);
     }
 
     public function destroy(\App\Models\Expense $expense)
@@ -129,12 +159,44 @@ class ExpenseController extends Controller
             'expense_id' => $expense->id
         ]);
 
+        // Get project before deletion for updating summary
+        $project = $expense->project;
+        
         $expense->delete();
 
         Log::info('Expense deleted successfully', [
             'expense_id' => $expense->id
         ]);
 
-        return response()->json(['message' => 'Expense deleted successfully']);
+        // Get all non-archived projects for summary data
+        $projects = \App\Models\Project::whereNull('archived_at')
+            ->whereNull('deleted_at')
+            ->get();
+            
+        $totalBudget = $projects->sum('budget');
+        $activeProjects = $projects->count();
+        $avgBudget = $activeProjects > 0 ? $projects->avg('budget') : 0;
+        
+        // Calculate project's remaining budget and percentage used
+        $project = $project->fresh(); // Refresh to get updated data
+        $projectSpent = $project->totalSpentWithDetailedEngineering();
+        $projectRemaining = max(0, $project->budget - $projectSpent);
+        $percentUsed = $project->budget > 0 ? min(100, ($projectSpent / $project->budget) * 100) : 0;
+
+        // Prepare the response with summary data
+        return response()->json([
+            'message' => 'Expense deleted successfully',
+            'summary' => [
+                'totalProjects' => $projects->count(),
+                'totalBudget' => $totalBudget,
+                'activeProjects' => $activeProjects,
+                'avgBudget' => $avgBudget,
+                'updatedProject' => [
+                    'id' => $project->id,
+                    'remaining_budget' => $projectRemaining,
+                    'percent_used' => $percentUsed
+                ]
+            ]
+        ]);
     }
 }
