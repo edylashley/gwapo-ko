@@ -221,6 +221,11 @@ body {
                     <button id="trackRecordBtn" class="track-record-btn bg-slate-700 hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1" disabled>
                         Track Record (<span id="selectedCount">0</span>)
                     </button>
+                    @if(auth()->user()->is_admin)
+                    <button id="deleteSelectedBtn" class="delete-selected-btn bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 border border-red-500 disabled:opacity-50 disabled:cursor-not-allowed ease-in-out transform hover:-translate-y-1" disabled>
+                        Delete Selected (<span id="deleteSelectedCount">0</span>)
+                    </button>
+                    @endif
                 </div>
             </div>
 
@@ -465,14 +470,6 @@ body {
                     @if(auth()->user()->is_admin)
                         <!-- Action Buttons - Admin Only -->
                         <div class="flex justify-center space-x-2 pt-4 border-t border-white border-opacity-20">
-                            <button class="edit-project-btn bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-emerald-600 ease-in-out transform hover:-translate-y-1"
-                                    data-project-id="{{ $project->id }}"
-                                    data-project-name="{{ $project->name }}"
-                                    data-project-budget="{{ $project->budget }}"
-                                    data-project-fpp-code="{{ $project->fpp_code ?? '' }}"
-                                    data-project-engineer-id="{{ $project->project_engineer_id ?? '' }}">
-                                <span>Edit</span>
-                            </button>
                             <button class="archive-project-btn bg-amber-700 hover:bg-amber-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-amber-600 ease-in-out transform hover:-translate-y-1"
                                     data-project-id="{{ $project->id }}"
                                     data-project-name="{{ $project->name }}">
@@ -506,65 +503,6 @@ body {
             @endforelse
         </div>
     </div>
-
-    <!-- Add Expense Modal -->
-    <div id="addExpenseModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition" style="z-index: 10000;">
-        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative animate-fadeInUp">
-            <button id="closeAddExpenseModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
-            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                <span class="mr-2">💸</span> Add Expense
-            </h2>
-            <form id="expenseForm" class="space-y-4">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="project_id" id="expenseProjectId">
-                
-                <div>
-                    <label for="expenseDescription" class="block text-gray-700 font-semibold mb-1">Description</label>
-                    <input type="text" id="expenseDescription" name="description" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="expenseAmount" class="block text-gray-700 font-semibold mb-1">Amount (₱)</label>
-                        <input type="number" id="expenseAmount" name="amount" min="0.01" step="0.01" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-                    </div>
-                    <div>
-                        <label for="expenseDate" class="block text-gray-700 font-semibold mb-1">Date</label>
-                        <input type="date" id="expenseDate" name="date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-                    </div>
-                </div>
-                
-                <div>
-                    <label for="expenseCategory" class="block text-gray-700 font-semibold mb-1">Category</label>
-                    <select id="expenseCategory" name="category" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
-                        <option value="materials">Materials</option>
-                        <option value="labor">Labor</option>
-                        <option value="fuel">Fuel/Oil/Equipment</option>
-                        <option value="miscellaneous">Miscellaneous & Contingencies</option>
-                        <option value="others">Others</option>
-                        <option value="salary">Salary</option>
-                    </select>
-                </div>
-                
-                <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" id="cancelExpenseBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-6 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-800 border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                        <span>Add Expense</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Back to Top Button - Centered in main content area (accounting for sidebar) -->
-    <button id="backToTopBtn" class="fixed bottom-8 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3 pointer-events-auto" onclick="scrollToTop()" style="left: calc(50% + 128px); transform: translateX(-50%);">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-        </svg>
-        <span class="text-base font-medium">TO TOP</span>
-    </button>
 
     <!-- Add Expense Modal -->
     <div id="addExpenseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition">
@@ -622,20 +560,178 @@ body {
                 </div>
                 
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" id="cancelExpenseBtn" 
+                    <button type="button" id="backToProjectBtn" 
                             class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">
-                        Cancel
+                        Back
                     </button>
-                    <button type="submit" 
-                            class="bg-green-600 hover:bg-green-800 px-6 py-3 rounded-lg font-bold text-white border-2 border-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
-                        <span id="submitExpenseText">Save Expenses</span>
+                    <button type="button" id="addSalaryBtn" 
+                            class="px-6 py-3 rounded-lg border-2 border-green-500 text-green-700 hover:bg-green-50 font-semibold transition-all duration-200 bg-green-100">
+                        Add Salary
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Add Project Modal -->
+    <!-- Add Salary Modal -->
+    <div id="addSalaryModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative animate-fadeInUp max-h-[85vh] overflow-y-auto">
+            <button id="closeAddSalaryModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
+            <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                <span class="mr-2">👥</span> Add Salary & Team Assignment
+            </h2>
+            <div id="salaryProjectInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="text-sm text-blue-600 font-medium">Project:</div>
+                <div id="salaryProjectName" class="font-bold text-blue-800"></div>
+            </div>
+            <form id="addSalaryForm" class="space-y-4">
+                <input type="hidden" id="salaryProjectId" name="project_id">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                
+                <!-- Project Engineer Section -->
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div class="flex items-center mb-2">
+                        <span class="text-lg mr-2">👨‍💼</span>
+                        <label for="projectEngineer" class="block text-gray-700 font-semibold">Project Engineer</label>
+                    </div>
+                    <select id="projectEngineer" name="project_engineer_id" class="w-full rounded-lg px-3 py-2 border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200" required>
+                        <option value="">Select Project Engineer</option>
+                        @foreach(\App\Models\Engineer::where('is_active', true)->get() as $engineer)
+                            <option value="{{ $engineer->id }}">{{ $engineer->name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">The project engineer will oversee the entire project</p>
+                </div>
+                
+                <!-- Team Members Section -->
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div class="flex items-center mb-2">
+                        <span class="text-lg mr-2">👥</span>
+                        <label class="block text-gray-700 font-semibold">Team Members</label>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-3">Select team members and assign individual salaries. One member will be the team head.</p>
+                    
+                    <div id="teamMembersContainer" class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-white">
+                        @foreach(\App\Models\Engineer::where('is_active', true)->get() as $engineer)
+                            <div class="team-member-item flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200" data-engineer-id="{{ $engineer->id }}">
+                                <div class="flex items-center space-x-2 flex-1">
+                                    <input type="checkbox" id="team_member_{{ $engineer->id }}" name="team_members[]" value="{{ $engineer->id }}" 
+                                           class="team-member-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                    <label for="team_member_{{ $engineer->id }}" class="text-sm font-medium text-gray-700 flex-1">{{ $engineer->name }}</label>
+                                </div>
+                                
+                                <!-- Team Head Selection -->
+                                <div class="flex items-center space-x-1">
+                                    <input type="radio" name="team_head" value="{{ $engineer->id }}" id="team_head_{{ $engineer->id }}" 
+                                           class="team-head-radio rounded-full border-gray-300 text-green-600 focus:ring-green-500 h-3 w-3" disabled>
+                                    <label for="team_head_{{ $engineer->id }}" class="text-xs text-green-600 font-medium">Head</label>
+                                </div>
+                                
+                                <!-- Individual Salary Input -->
+                                <div class="flex items-center space-x-1">
+                                    <span class="text-xs text-gray-500 font-medium">₱</span>
+                                    <input type="number" name="individual_salaries[{{ $engineer->id }}]" 
+                                           class="individual-salary-input w-20 rounded px-2 py-1 border border-gray-300 text-xs focus:outline-none focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400" 
+                                           placeholder="0.00" min="0" step="0.01" disabled>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    <!-- Team Summary -->
+                    <div id="teamSummary" class="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-medium text-blue-800">Team Head:</span>
+                            <span id="teamHeadName" class="text-blue-600 font-semibold">-</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs mt-1">
+                            <span class="font-medium text-blue-800">Team Members:</span>
+                            <span id="teamMembersCount" class="text-blue-600 font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs mt-1">
+                            <span class="font-medium text-blue-800">Total Salary:</span>
+                            <span id="totalSalaryDisplay" class="text-blue-600 font-semibold">₱0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <button type="button" onclick="if(window.initializeSalaryModalUX) window.initializeSalaryModalUX();" 
+                            class="px-3 py-1 rounded-lg border border-orange-500 text-orange-700 hover:bg-orange-50 font-medium transition-all duration-200 bg-orange-100 text-xs">
+                        🔧 Debug: Re-init UX
+                    </button>
+                    <div class="flex space-x-3">
+                        <button type="button" id="cancelSalaryBtn" 
+                                class="px-4 py-2 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100 text-sm">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="bg-blue-600 hover:bg-blue-800 px-4 py-2 rounded-lg font-bold text-white border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
+                            <span id="submitSalaryText">Save Salary & Team</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Salaries Modal -->
+    <div id="editSalariesModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-3xl relative animate-fadeInUp max-h-[90vh] overflow-y-auto">
+            <button id="closeEditSalariesModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
+            <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center">
+                <span class="mr-2">👥</span> Current Engineering Team
+            </h2>
+            <div id="editSalariesProjectInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm text-blue-600 font-medium">Project:</div>
+                        <div id="editSalariesProjectName" class="font-bold text-blue-800 text-lg"></div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-blue-600 font-medium">Period:</div>
+                        <div id="editSalariesPeriod" class="font-medium text-blue-700"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Display Section -->
+            <div id="teamDisplayContainer" class="space-y-4">
+                <!-- Will be populated by JavaScript -->
+                <div class="text-center py-8 text-gray-400">
+                    <div class="text-4xl mb-2">👷</div>
+                    <p>Loading team information...</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-500">
+                    Last updated: <span id="lastUpdatedTime">Just now</span>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" id="refreshTeamBtn" 
+                            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                    <button type="button" id="closeEditSalariesBtn" 
+                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top Button - Centered in main content area (accounting for sidebar) -->
+    <button id="backToTopBtn" class="fixed bottom-8 bg-green-800 hover:bg-green-700 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 z-50 opacity-0 invisible hover:scale-105 flex items-center space-x-3 pointer-events-auto" onclick="scrollToTop()" style="left: calc(50% + 128px); transform: translateX(-50%);">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+        <span class="text-base font-medium">TO TOP</span>
+    </button>
 
 <!-- Edit Expense Modal (for Track Records) -->
 <div id="editExpenseModal" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40 hidden transition" style="z-index:9999;">
@@ -666,6 +762,7 @@ body {
     </div>
 </div>
 
+    <!-- Add Project Modal -->
     <div id="addProjectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition">
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative animate-fadeInUp">
             <button id="closeAddProjectModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
@@ -724,6 +821,10 @@ body {
                         </button>
                         <button id="showReceiptsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200">
                             View Receipts
+                        </button>
+                        <button id="editDetailedEngineeringBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center">
+                            <i class="fas fa-users-cog mr-2"></i>
+                            Edit Engineering Team
                         </button>
                     </div>
                 </div>
@@ -951,7 +1052,6 @@ body {
         // Add Expense Modal functionality
         const addExpenseModal = document.getElementById('addExpenseModal');
         const closeAddExpenseBtn = document.getElementById('closeAddExpenseModal');
-        const cancelExpenseBtn = document.getElementById('cancelExpenseBtn');
         const addExpenseForm = document.getElementById('addExpenseForm');
 
 
@@ -1097,15 +1197,38 @@ body {
             ModalManager.closeModal('addExpenseModal');
         }
 
-        // Event listeners
-        openAddProjectBtn?.addEventListener('click', openAddModal);
-        openAddProjectBtnEmpty?.addEventListener('click', openAddModal);
+        // Event listeners - wrapped in DOMContentLoaded to ensure elements exist
+        document.addEventListener('DOMContentLoaded', function() {
+            // Project modal event listeners
+            if (openAddProjectBtn) {
+                openAddProjectBtn.addEventListener('click', openAddModal);
+            }
+            if (openAddProjectBtnEmpty) {
+                openAddProjectBtnEmpty.addEventListener('click', openAddModal);
+            }
+            if (closeAddProjectBtn) {
         closeAddProjectBtn.addEventListener('click', closeModal);
+            }
+            if (cancelProjectBtn) {
         cancelProjectBtn.addEventListener('click', closeModal);
+            }
 
-        // Add Expense Modal event listeners
+        // Add Expense Modal event listeners - using correct button IDs
+        const closeAddExpenseBtn = document.getElementById('closeAddExpenseModal');
+        const backToProjectBtn = document.getElementById('backToProjectBtn');
+        
+        if (closeAddExpenseBtn) {
         closeAddExpenseBtn.addEventListener('click', closeExpenseModal);
-        cancelExpenseBtn.addEventListener('click', closeExpenseModal);
+        }
+        if (backToProjectBtn) {
+            backToProjectBtn.addEventListener('click', function() {
+                // Close expense modal and open project modal
+                ModalManager.closeModal('addExpenseModal');
+                setTimeout(() => {
+                    ModalManager.openModal('addProjectModal');
+                }, 300);
+            });
+        }
 
         // ESC handler removed - using centralized modal manager
 
@@ -1168,7 +1291,1010 @@ body {
             });
         });
 
+        // Add Salary Modal functionality
+        const addSalaryBtn = document.getElementById('addSalaryBtn');
+        const closeAddSalaryBtn = document.getElementById('closeAddSalaryModal');
+        const cancelSalaryBtn = document.getElementById('cancelSalaryBtn');
+        const addSalaryForm = document.getElementById('addSalaryForm');
+
+        if (addSalaryBtn) {
+            addSalaryBtn.addEventListener('click', async function() {
+                // First save the expenses
+                const expenseForm = document.getElementById('addExpenseForm');
+                const formData = new FormData(expenseForm);
+                
+                try {
+                    // Show loading state
+                    const originalText = addSalaryBtn.innerHTML;
+                    addSalaryBtn.disabled = true;
+                    addSalaryBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
+                    
+                    // Send expense data
+                    const response = await fetch('/expenses', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        // Show success message
+                        showCenteredNotification('Expenses saved successfully!', 'success', 2000);
+                        
+                        // Get project info from the expense modal
+                        const projectId = document.getElementById('expenseProjectId').value;
+                        const projectName = document.getElementById('expenseProjectName').textContent;
+                        
+                        // Set project info in salary modal
+                        document.getElementById('salaryProjectId').value = projectId;
+                        document.getElementById('salaryProjectName').textContent = projectName;
+                        
+                        // Close expense modal and open salary modal
+                        ModalManager.closeModal('addExpenseModal');
+                        setTimeout(() => {
+                            ModalManager.openModal('addSalaryModal');
+                            // Initialize UX after modal is opened
+                            setTimeout(() => {
+                                if (window.initializeSalaryModalUX) {
+                                    window.initializeSalaryModalUX();
+                                }
+                            }, 200);
+                        }, 300);
+                    } else {
+                        throw new Error(data.message || 'Failed to save expenses');
+                    }
+                } catch (error) {
+                    console.error('Error saving expenses:', error);
+                    showCenteredNotification(error.message || 'An error occurred while saving expenses', 'error', 1000);
+                } finally {
+                    // Reset button state
+                    addSalaryBtn.disabled = false;
+                    addSalaryBtn.innerHTML = originalText;
+                }
+            });
+        }
+
+        if (closeAddSalaryBtn) {
+            closeAddSalaryBtn.addEventListener('click', function() {
+                ModalManager.closeModal('addSalaryModal');
+            });
+        }
+
+        if (cancelSalaryBtn) {
+            cancelSalaryBtn.addEventListener('click', function() {
+                ModalManager.closeModal('addSalaryModal');
+            });
+        }
+
+        // Handle salary form submission
+        if (addSalaryForm) {
+            addSalaryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                console.log('Salary form submission started');
+                
+                // Validate form before submission
+                if (!addSalaryForm.checkValidity()) {
+                    console.log('Form validation failed');
+                    addSalaryForm.reportValidity();
+                    return;
+                }
+                
+                const submitBtn = addSalaryForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                try {
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
+                    
+                    const formData = new FormData(addSalaryForm);
+                    
+                    const response = await fetch('/monthly-assignments/create-salary', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showCenteredNotification(data.message, 'success', 1000);
+                        
+                        // Close modal and reload page
+                        ModalManager.closeModal('addSalaryModal');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(data.message || 'Failed to save salary assignment');
+                    }
+                } catch (error) {
+                    console.error('Error saving salary assignment:', error);
+                    showCenteredNotification(error.message || 'An error occurred while saving salary assignment', 'error', 1000);
+                } finally {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+
+        // Enhanced Salary Modal UX - Team Member Management
+        window.initializeSalaryModalUX = function() {
+            console.log('Initializing salary modal UX...');
+            
+            const teamMemberCheckboxes = document.querySelectorAll('.team-member-checkbox');
+            const teamHeadRadios = document.querySelectorAll('.team-head-radio');
+            const individualSalaryInputs = document.querySelectorAll('.individual-salary-input');
+            const teamSummary = document.getElementById('teamSummary');
+            const teamHeadName = document.getElementById('teamHeadName');
+            const teamMembersCount = document.getElementById('teamMembersCount');
+            const totalSalaryDisplay = document.getElementById('totalSalaryDisplay');
+            const projectEngineerSelect = document.getElementById('projectEngineer');
+            
+            console.log('Found elements:', {
+                teamMemberCheckboxes: teamMemberCheckboxes.length,
+                teamHeadRadios: teamHeadRadios.length,
+                individualSalaryInputs: individualSalaryInputs.length,
+                teamSummary: !!teamSummary,
+                teamHeadName: !!teamHeadName,
+                teamMembersCount: !!teamMembersCount,
+                totalSalaryDisplay: !!totalSalaryDisplay
+            });
+
+            // Handle team member checkbox changes
+            teamMemberCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    console.log('Team member checkbox changed:', this.value, this.checked);
+                    const engineerId = this.value;
+                    const teamHeadRadio = document.getElementById(`team_head_${engineerId}`);
+                    const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                    const teamMemberItem = this.closest('.team-member-item');
+
+                    if (this.checked) {
+                        // Enable team head radio and salary input
+                        teamHeadRadio.disabled = false;
+                        salaryInput.disabled = false;
+                        teamMemberItem.classList.add('bg-blue-50', 'border-blue-300');
+                        teamMemberItem.classList.remove('bg-gray-50', 'border-gray-200');
+                        console.log('Enabled team head radio and salary input for engineer:', engineerId);
+                    } else {
+                        // Disable team head radio and salary input
+                        teamHeadRadio.disabled = true;
+                        teamHeadRadio.checked = false;
+                        salaryInput.disabled = true;
+                        salaryInput.value = '';
+                        teamMemberItem.classList.remove('bg-blue-50', 'border-blue-300');
+                        teamMemberItem.classList.add('bg-gray-50', 'border-gray-200');
+                        console.log('Disabled team head radio and salary input for engineer:', engineerId);
+                    }
+                    
+                    updateTeamSummary();
+                });
+            });
+
+            // Handle team head radio changes
+            teamHeadRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    console.log('Team head radio changed:', this.value, this.checked);
+                    if (this.checked) {
+                        // Uncheck other team head radios
+                        teamHeadRadios.forEach(otherRadio => {
+                            if (otherRadio !== this) {
+                                otherRadio.checked = false;
+                            }
+                        });
+                        
+                        // Highlight the selected team head
+                        const teamMemberItem = this.closest('.team-member-item');
+                        teamMemberItem.classList.add('bg-green-50', 'border-green-300');
+                        teamMemberItem.classList.remove('bg-blue-50', 'border-blue-300');
+                        console.log('Set team head to engineer:', this.value);
+                    }
+                    
+                    updateTeamSummary();
+                });
+            });
+
+            // Handle individual salary input changes
+            individualSalaryInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    console.log('Salary input changed:', this.name, this.value);
+                    updateTeamSummary();
+                });
+            });
+
+            // Update team summary
+            function updateTeamSummary() {
+                const selectedMembers = Array.from(teamMemberCheckboxes).filter(cb => cb.checked);
+                const selectedTeamHead = Array.from(teamHeadRadios).find(radio => radio.checked);
+                let totalSalary = 0;
+
+                // Count team members
+                const memberCount = selectedMembers.length;
+                teamMembersCount.textContent = memberCount;
+
+                // Get team head name
+                if (selectedTeamHead) {
+                    const teamHeadLabel = document.querySelector(`label[for="team_head_${selectedTeamHead.value}"]`);
+                    teamHeadName.textContent = teamHeadLabel ? teamHeadLabel.textContent : 'Unknown';
+                } else {
+                    teamHeadName.textContent = '-';
+                }
+
+                // Calculate total salary
+                selectedMembers.forEach(checkbox => {
+                    const engineerId = checkbox.value;
+                    const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                    const salary = parseFloat(salaryInput.value) || 0;
+                    totalSalary += salary;
+                });
+
+                // Update display
+                totalSalaryDisplay.textContent = `₱${totalSalary.toFixed(2)}`;
+
+                // Show/hide team summary
+                if (memberCount > 0) {
+                    teamSummary.classList.remove('hidden');
+                } else {
+                    teamSummary.classList.add('hidden');
+                }
+
+                // Validate form
+                validateSalaryForm();
+            }
+
+            // Validate the form
+            function validateSalaryForm() {
+                const selectedMembers = Array.from(teamMemberCheckboxes).filter(cb => cb.checked);
+                const selectedTeamHead = Array.from(teamHeadRadios).find(radio => radio.checked);
+                const projectEngineer = document.getElementById('projectEngineer').value;
+                const submitBtn = document.querySelector('#addSalaryForm button[type="submit"]');
+
+                let isValid = true;
+                let errorMessage = '';
+
+                // Check if project engineer is selected
+                if (!projectEngineer) {
+                    isValid = false;
+                    errorMessage = 'Please select a Project Engineer';
+                }
+                // Check if at least one team member is selected
+                else if (selectedMembers.length === 0) {
+                    isValid = false;
+                    errorMessage = 'Please select at least one team member';
+                }
+                // Check if team head is selected
+                else if (!selectedTeamHead) {
+                    isValid = false;
+                    errorMessage = 'Please select a team head';
+                }
+                // Check if all selected members have salaries
+                else {
+                    const hasEmptySalaries = selectedMembers.some(checkbox => {
+                        const engineerId = checkbox.value;
+                        const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                        return !salaryInput.value || parseFloat(salaryInput.value) <= 0;
+                    });
+
+                    if (hasEmptySalaries) {
+                        isValid = false;
+                        errorMessage = 'Please enter salary amounts for all team members';
+                    }
+                }
+
+                // Update submit button state
+                if (submitBtn) {
+                    submitBtn.disabled = !isValid;
+                    if (!isValid) {
+                        submitBtn.title = errorMessage;
+                    } else {
+                        submitBtn.title = '';
+                    }
+                }
+
+                return isValid;
+            }
+
+            
+            // Handle project engineer change
+            if (projectEngineerSelect) {
+                projectEngineerSelect.addEventListener('change', function() {
+                    const selectedEngineerId = this.value;
+                    
+                    // Reset all team member checkboxes, radios, and inputs
+                    teamMemberCheckboxes.forEach(checkbox => {
+                        const engineerId = checkbox.value;
+                        const teamHeadRadio = document.getElementById(`team_head_${engineerId}`);
+                        const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                        const teamMemberItem = checkbox.closest('.team-member-item');
+                        
+                        if (engineerId === selectedEngineerId) {
+                            // Disable and uncheck the project engineer
+                            checkbox.disabled = true;
+                            checkbox.checked = false;
+                            teamHeadRadio.disabled = true;
+                            teamHeadRadio.checked = false;
+                            salaryInput.disabled = true;
+                            salaryInput.value = '';
+                            teamMemberItem.classList.add('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            // Re-enable other engineers if they were previously disabled
+                            if (checkbox.disabled) {
+                                checkbox.disabled = false;
+                                teamMemberItem.classList.remove('opacity-50', 'cursor-not-allowed');
+                            }
+                        }
+                    });
+                    
+                    updateTeamSummary();
+                });
+                
+                // Trigger change event in case a project engineer is pre-selected
+                if (projectEngineerSelect.value) {
+                    projectEngineerSelect.dispatchEvent(new Event('change'));
+                }
+            }
+
+            // Initialize validation
+            validateSalaryForm();
+        };
+
+        // Initialize salary modal UX when modal opens
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize when salary modal is opened
+            const addSalaryBtn = document.getElementById('addSalaryBtn');
+            if (addSalaryBtn) {
+                addSalaryBtn.addEventListener('click', function() {
+                    // Initialize UX after a short delay to ensure modal is open
+                    setTimeout(() => {
+                        initializeSalaryModalUX();
+                    }, 100);
+                });
+            }
+            
+            // Also initialize when modal is opened via ModalManager
+            const salaryModal = document.getElementById('addSalaryModal');
+            if (salaryModal) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (!salaryModal.classList.contains('hidden')) {
+                                // Modal is now visible, initialize UX
+                                setTimeout(() => {
+                                    initializeSalaryModalUX();
+                                }, 100);
+                            }
+                        }
+                    });
+                });
+                
+                observer.observe(salaryModal, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+            }
+            
+            // Initialize edit salaries modal event listeners
+            const closeEditSalariesBtn = document.getElementById('closeEditSalariesModal');
+            const cancelEditSalariesBtn = document.getElementById('cancelEditSalariesBtn');
+            
+            if (closeEditSalariesBtn) {
+                closeEditSalariesBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('editSalariesModal');
+                });
+            }
+            
+            if (cancelEditSalariesBtn) {
+                cancelEditSalariesBtn.addEventListener('click', function() {
+                    ModalManager.closeModal('editSalariesModal');
+                });
+            }
+        });
+
+        // Format date as Month Year (e.g., "August 2023")
+        function formatMonthYear(dateString) {
+            if (!dateString) return 'Current Month';
+            const date = new Date(dateString);
+            return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        // Format a date string to a readable format
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            if (amount === null || amount === undefined) return '₱0.00';
+            return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+        }
+
+        // Edit Salaries Modal Functionality
+        window.openEditSalariesModal = function(projectId) {
+            console.log('Opening edit salaries modal for project:', projectId);
+            
+            // Set loading state
+            const teamContainer = document.getElementById('teamDisplayContainer');
+            teamContainer.innerHTML = `
+                <div class="text-center py-8 text-gray-400">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p>Loading team information...</p>
+                </div>
+            `;
+            
+            // Set current time
+            document.getElementById('lastUpdatedTime').textContent = 'Just now';
+            
+            // Open modal immediately for better UX
+            ModalManager.openModal('editSalariesModal');
+            
+            // Fetch current team data
+            fetch(`/projects/${projectId}/monthly-assignments`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Team data:', data);
+                    
+                    // Set project name
+                    document.getElementById('editSalariesProjectName').textContent = data.project_name || 'Unknown Project';
+                    
+                    // Set period
+                    const periodElement = document.getElementById('editSalariesPeriod');
+                    periodElement.textContent = formatMonthYear(data.period) || 'Current Month';
+                    
+                    // Render team members
+                    renderTeamMembers(data.monthly_assignments || []);
+                    
+                    // Set up refresh button
+                    const refreshBtn = document.getElementById('refreshTeamBtn');
+                    if (refreshBtn) {
+                        refreshBtn.onclick = function() {
+                            openEditSalariesModal(projectId);
+                        };
+                    }
+                    
+                    // Set up close button
+                    const closeBtn = document.getElementById('closeEditSalariesBtn');
+                    if (closeBtn) {
+                        closeBtn.onclick = function() {
+                            ModalManager.closeModal('editSalariesModal');
+                        };
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching team data:', error);
+                    teamContainer.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <div class="text-4xl mb-2">⚠️</div>
+                            <p>Failed to load team information.</p>
+                            <button onclick="openEditSalariesModal(${projectId})" 
+                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                });
+        };
+        
+        // Render detailed engineering team in the modal
+        function renderDetailedEngineeringTeam(assignments) {
+            const container = document.getElementById('engineeringTeamList');
+            
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p>No team members assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group assignments by role
+            const teamHead = assignments.find(a => a.is_team_head);
+            const projectEngineer = assignments.find(a => a.is_project_engineer);
+            const teamMembers = assignments.filter(a => !a.is_team_head && !a.is_project_engineer);
+            
+            let html = '';
+            
+            // Project Engineer Section
+            if (projectEngineer) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                            Project Engineer
+                        </h3>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-green-800">${projectEngineer.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-green-600 mt-1">${projectEngineer.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-green-500 mt-1">Assigned: ${formatDate(projectEngineer.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-green-700">Salary</div>
+                                    <div class="text-lg font-bold text-green-800">${formatCurrency(projectEngineer.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Head Section
+            if (teamHead) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Team Head
+                        </h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-blue-800">${teamHead.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-blue-600 mt-1">${teamHead.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-blue-500 mt-1">Assigned: ${formatDate(teamHead.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-blue-700">Salary</div>
+                                    <div class="text-lg font-bold text-blue-800">${formatCurrency(teamHead.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Members Section
+            if (teamMembers.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                            Team Members (${teamMembers.length})
+                        </h3>
+                        <div class="space-y-3">
+                `;
+                
+                teamMembers.forEach(member => {
+                    html += `
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-purple-800">${member.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-purple-600 mt-1">${member.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-purple-500 mt-1">Assigned: ${formatDate(member.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-purple-700">Salary</div>
+                                    <div class="text-lg font-bold text-purple-800">${formatCurrency(member.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Total Salary
+            const totalSalary = assignments.reduce((sum, member) => sum + (parseFloat(member.salary) || 0), 0);
+            html += `
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Total Monthly Salary:</span>
+                        <span class="text-xl font-bold text-blue-700">${formatCurrency(totalSalary)}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-500">
+                    <p class="flex items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                        <span>Project Engineer</span>
+                    </p>
+                    <p class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                        <span>Team Head</span>
+                    </p>
+                    <p class="flex items-center mt-1">
+                        <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                        <span>Team Member</span>
+                    </p>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // Render team members in the modal
+        function renderTeamMembers(assignments) {
+            const container = document.getElementById('teamDisplayContainer');
+            
+            if (!assignments || assignments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <div class="text-4xl mb-2">👥</div>
+                        <p>No team members assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Separate team head and members
+            const teamHead = assignments.find(a => a.is_team_head);
+            const teamMembers = assignments.filter(a => !a.is_team_head);
+            
+            let html = '';
+            
+            // Team Head Section
+            if (teamHead) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                            Team Head
+                        </h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-blue-800">${teamHead.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-blue-600 mt-1">${teamHead.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-blue-500 mt-1">Assigned: ${formatDate(teamHead.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-blue-700">Salary</div>
+                                    <div class="text-lg font-bold text-blue-800">${formatCurrency(teamHead.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Team Members Section
+            if (teamMembers.length > 0) {
+                html += `
+                    <div>
+                        <h3 class="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                            Team Members (${teamMembers.length})
+                        </h3>
+                        <div class="space-y-3">
+                `;
+                
+                teamMembers.forEach(member => {
+                    html += `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <div class="font-medium text-green-800">${member.engineer_name || 'N/A'}</div>
+                                    <div class="text-sm text-green-600 mt-1">${member.engineer_specialization || 'No specialization'}</div>
+                                    <div class="text-xs text-green-500 mt-1">Assigned: ${formatDate(member.assigned_at)}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-green-700">Salary</div>
+                                    <div class="text-lg font-bold text-green-800">${formatCurrency(member.salary)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Total Salary
+            const totalSalary = assignments.reduce((sum, member) => sum + (parseFloat(member.salary) || 0), 0);
+            html += `
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-700">Total Monthly Salary:</span>
+                        <span class="text-xl font-bold text-blue-700">${formatCurrency(totalSalary)}</span>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Populate edit team members
+        function populateEditTeamMembers(assignments) {
+            const container = document.getElementById('editTeamMembersContainer');
+            let html = '';
+            
+            assignments.forEach(assignment => {
+                html += `
+                    <div class="edit-team-member-item flex items-center space-x-2 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200" data-engineer-id="${assignment.engineer_id}">
+                        <div class="flex items-center space-x-2 flex-1">
+                            <input type="checkbox" id="edit_team_member_${assignment.engineer_id}" name="edit_team_members[]" value="${assignment.engineer_id}" 
+                                   class="edit-team-member-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4" checked>
+                            <label for="edit_team_member_${assignment.engineer_id}" class="text-sm font-medium text-gray-700 flex-1">${assignment.engineer_name}</label>
+                        </div>
+                        
+                        <!-- Team Head Selection -->
+                        <div class="flex items-center space-x-1">
+                            <input type="radio" name="edit_team_head" value="${assignment.engineer_id}" id="edit_team_head_${assignment.engineer_id}" 
+                                   class="edit-team-head-radio rounded-full border-gray-300 text-green-600 focus:ring-green-500 h-3 w-3" ${assignment.is_team_head ? 'checked' : ''}>
+                            <label for="edit_team_head_${assignment.engineer_id}" class="text-xs text-green-600 font-medium">Head</label>
+                        </div>
+                        
+                        <!-- Individual Salary Input -->
+                        <div class="flex items-center space-x-1">
+                            <span class="text-xs text-gray-500 font-medium">₱</span>
+                            <input type="number" name="edit_individual_salaries[${assignment.engineer_id}]" 
+                                   class="edit-individual-salary-input w-20 rounded px-2 py-1 border border-gray-300 text-xs focus:outline-none focus:border-blue-500" 
+                                   placeholder="0.00" min="0" step="0.01" value="${assignment.salary || 0}">
+                        </div>
+                        
+                        <!-- Remove Button -->
+                        <button type="button" onclick="removeTeamMember(${assignment.engineer_id})" 
+                                class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors duration-150">
+                            ✕
+                        </button>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Remove team member function
+        window.removeTeamMember = function(engineerId) {
+            const memberItem = document.querySelector(`[data-engineer-id="${engineerId}"]`);
+            if (memberItem) {
+                memberItem.remove();
+                updateEditTeamSummary();
+            }
+        };
+
+        // Initialize Edit Salaries UX
+        window.initializeEditSalariesUX = function() {
+            console.log('Initializing edit salaries UX...');
+            
+            const editTeamMemberCheckboxes = document.querySelectorAll('.edit-team-member-checkbox');
+            const editTeamHeadRadios = document.querySelectorAll('.edit-team-head-radio');
+            const editIndividualSalaryInputs = document.querySelectorAll('.edit-individual-salary-input');
+            const editTeamSummary = document.getElementById('editTeamSummary');
+            const editTeamHeadName = document.getElementById('editTeamHeadName');
+            const editTeamMembersCount = document.getElementById('editTeamMembersCount');
+            const editTotalSalaryDisplay = document.getElementById('editTotalSalaryDisplay');
+
+            // Handle team member checkbox changes
+            editTeamMemberCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    console.log('Edit team member checkbox changed:', this.value, this.checked);
+                    const engineerId = this.value;
+                    const teamHeadRadio = document.getElementById(`edit_team_head_${engineerId}`);
+                    const salaryInput = document.querySelector(`input[name="edit_individual_salaries[${engineerId}]"]`);
+                    const teamMemberItem = this.closest('.edit-team-member-item');
+
+                    if (this.checked) {
+                        // Enable team head radio and salary input
+                        teamHeadRadio.disabled = false;
+                        salaryInput.disabled = false;
+                        teamMemberItem.classList.add('bg-blue-50', 'border-blue-300');
+                        teamMemberItem.classList.remove('bg-gray-50', 'border-gray-200');
+                    } else {
+                        // Disable team head radio and salary input
+                        teamHeadRadio.disabled = true;
+                        teamHeadRadio.checked = false;
+                        salaryInput.disabled = true;
+                        salaryInput.value = '';
+                        teamMemberItem.classList.remove('bg-blue-50', 'border-blue-300');
+                        teamMemberItem.classList.add('bg-gray-50', 'border-gray-200');
+                    }
+                    
+                    updateEditTeamSummary();
+                });
+            });
+
+            // Handle team head radio changes
+            editTeamHeadRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    console.log('Edit team head radio changed:', this.value, this.checked);
+                    if (this.checked) {
+                        // Uncheck other team head radios
+                        editTeamHeadRadios.forEach(otherRadio => {
+                            if (otherRadio !== this) {
+                                otherRadio.checked = false;
+                            }
+                        });
+                        
+                        // Highlight the selected team head
+                        const teamMemberItem = this.closest('.edit-team-member-item');
+                        teamMemberItem.classList.add('bg-green-50', 'border-green-300');
+                        teamMemberItem.classList.remove('bg-blue-50', 'border-blue-300');
+                    }
+                    
+                    updateEditTeamSummary();
+                });
+            });
+
+            // Handle individual salary input changes
+            editIndividualSalaryInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    console.log('Edit salary input changed:', this.name, this.value);
+                    updateEditTeamSummary();
+                });
+            });
+
+            // Update edit team summary
+            function updateEditTeamSummary() {
+                const selectedMembers = Array.from(editTeamMemberCheckboxes).filter(cb => cb.checked);
+                const selectedTeamHead = Array.from(editTeamHeadRadios).find(radio => radio.checked);
+                let totalSalary = 0;
+
+                // Count team members
+                const memberCount = selectedMembers.length;
+                editTeamMembersCount.textContent = memberCount;
+
+                // Get team head name
+                if (selectedTeamHead) {
+                    const teamHeadLabel = document.querySelector(`label[for="edit_team_head_${selectedTeamHead.value}"]`);
+                    editTeamHeadName.textContent = teamHeadLabel ? teamHeadLabel.textContent : 'Unknown';
+                } else {
+                    editTeamHeadName.textContent = '-';
+                }
+
+                // Calculate total salary
+                selectedMembers.forEach(checkbox => {
+                    const engineerId = checkbox.value;
+                    const salaryInput = document.querySelector(`input[name="edit_individual_salaries[${engineerId}]"]`);
+                    const salary = parseFloat(salaryInput.value) || 0;
+                    totalSalary += salary;
+                });
+
+                // Update display
+                editTotalSalaryDisplay.textContent = `₱${totalSalary.toFixed(2)}`;
+
+                // Show/hide team summary
+                if (memberCount > 0) {
+                    editTeamSummary.classList.remove('hidden');
+                } else {
+                    editTeamSummary.classList.add('hidden');
+                }
+
+                // Validate form
+                validateEditSalariesForm();
+            }
+
+            // Validate the edit form
+            function validateEditSalariesForm() {
+                const selectedMembers = Array.from(editTeamMemberCheckboxes).filter(cb => cb.checked);
+                const selectedTeamHead = Array.from(editTeamHeadRadios).find(radio => radio.checked);
+                const projectEngineer = document.getElementById('editProjectEngineer').value;
+                const submitBtn = document.querySelector('#editSalariesForm button[type="submit"]');
+
+                let isValid = true;
+                let errorMessage = '';
+
+                // Check if project engineer is selected
+                if (!projectEngineer) {
+                    isValid = false;
+                    errorMessage = 'Please select a Project Engineer';
+                }
+                // Check if at least one team member is selected
+                else if (selectedMembers.length === 0) {
+                    isValid = false;
+                    errorMessage = 'Please select at least one team member';
+                }
+                // Check if team head is selected
+                else if (!selectedTeamHead) {
+                    isValid = false;
+                    errorMessage = 'Please select a team head';
+                }
+                // Check if all selected members have salaries
+                else {
+                    const hasEmptySalaries = selectedMembers.some(checkbox => {
+                        const engineerId = checkbox.value;
+                        const salaryInput = document.querySelector(`input[name="edit_individual_salaries[${engineerId}]"]`);
+                        return !salaryInput.value || parseFloat(salaryInput.value) <= 0;
+                    });
+
+                    if (hasEmptySalaries) {
+                        isValid = false;
+                        errorMessage = 'Please enter salary amounts for all team members';
+                    }
+                }
+
+                // Update submit button state
+                if (submitBtn) {
+                    submitBtn.disabled = !isValid;
+                    if (!isValid) {
+                        submitBtn.title = errorMessage;
+                    } else {
+                        submitBtn.title = '';
+                    }
+                }
+
+                return isValid;
+            }
+
+            // Initialize validation
+            validateEditSalariesForm();
+        };
+
+        // Handle edit salaries form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const editSalariesForm = document.getElementById('editSalariesForm');
+            if (editSalariesForm) {
+                editSalariesForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    console.log('Edit salaries form submission started');
+                    
+                    // Validate form before submission
+                    if (!editSalariesForm.checkValidity()) {
+                        console.log('Form validation failed');
+                        editSalariesForm.reportValidity();
+                        return;
+                    }
+                    
+                    const submitBtn = editSalariesForm.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    
+                    try {
+                        // Show loading state
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Updating...';
+                        
+                        const formData = new FormData(editSalariesForm);
+                        
+                        const response = await fetch('/monthly-assignments/update-salary', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            showCenteredNotification(data.message, 'success', 1000);
+                            
+                            // Close modal and reload page
+                            ModalManager.closeModal('editSalariesModal');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            throw new Error(data.message || 'Failed to update salary assignment');
+                        }
+                    } catch (error) {
+                        console.error('Error updating salary assignment:', error);
+                        showCenteredNotification(error.message || 'An error occurred while updating salary assignment', 'error', 1000);
+                    } finally {
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                });
+            }
+        });
+        }); // Close DOMContentLoaded event listener
+
         // Form submission
+        if (projectForm) {
         projectForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1203,7 +2329,7 @@ body {
                     console.log('Success:', data.message);
 
                     // Show centered success message
-                    showCenteredNotification(data.message, 'success', 3000);
+                    showCenteredNotification(data.message, 'success', 1000);
 
                     // Close modal and reload page
                     closeModal();
@@ -1223,8 +2349,10 @@ body {
                 hideButtonLoading(submitButton, originalText);
             }
         });
+        }
 
         // Add Expense Form submission
+        if (addExpenseForm) {
         addExpenseForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -1248,7 +2376,7 @@ body {
                     console.log('Expense added successfully!:', data);
 
                     // Show success message
-                    showCenteredNotification('Expense added successfully!', 'success', 3000);
+                    showCenteredNotification('Expense added successfully!', 'success', 1000);
 
                     // Close modal and reset form
                     closeExpenseModal();
@@ -1278,6 +2406,7 @@ body {
                 hideButtonLoading(submitButton, originalText);
             }
         });
+        }
 
         // Archive project function
         async function archiveProject(id, name) {
@@ -1449,21 +2578,36 @@ body {
             const totalCheckboxes = projectCheckboxes.length;
 
             selectedCountSpan.textContent = count;
+            if (deleteSelectedCountSpan) {
+                deleteSelectedCountSpan.textContent = count;
+            }
             trackRecordBtn.disabled = count === 0;
+            if (deleteSelectedBtn) {
+                deleteSelectedBtn.disabled = count === 0;
+            }
 
             // Update select all checkbox state
             if (count === 0) {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = false;
                 trackRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                if (deleteSelectedBtn) {
+                    deleteSelectedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
             } else if (count === totalCheckboxes) {
                 selectAllCheckbox.checked = true;
                 selectAllCheckbox.indeterminate = false;
                 trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (deleteSelectedBtn) {
+                    deleteSelectedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             } else {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = true; // Show indeterminate state for partial selection
                 trackRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (deleteSelectedBtn) {
+                    deleteSelectedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             }
         }
 
@@ -1500,6 +2644,55 @@ body {
 
             await openMultipleTrackRecordModal(currentSelectedProjects);
         });
+
+        // Delete Selected button functionality (Admin only)
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const deleteSelectedCountSpan = document.getElementById('deleteSelectedCount');
+
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.addEventListener('click', async function() {
+            const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
+            if (selectedCheckboxes.length === 0) return;
+
+            const selectedProjects = Array.from(selectedCheckboxes).map(cb => ({
+                id: cb.dataset.projectId,
+                name: cb.dataset.projectName
+            }));
+
+            // Show confirmation dialog
+            const projectNames = selectedProjects.map(p => p.name).join(', ');
+            const confirmMessage = `Are you sure you want to delete the following project${selectedProjects.length > 1 ? 's' : ''}?\n\n${projectNames}\n\nThis action cannot be undone and will permanently delete all associated data including expenses, team assignments, and project records.`;
+
+            if (confirm(confirmMessage)) {
+                try {
+                    // Show loading state
+                    deleteSelectedBtn.disabled = true;
+                    deleteSelectedBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Deleting...';
+
+                    // Delete each project
+                    for (const project of selectedProjects) {
+                        await deleteProject(project.id, project.name);
+                    }
+
+                    // Show success message
+                    showCenteredNotification(`Successfully deleted ${selectedProjects.length} project${selectedProjects.length > 1 ? 's' : ''}`, 'success', 1000);
+
+                    // Reload the page to refresh the project list
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Error deleting projects:', error);
+                    showCenteredNotification('An error occurred while deleting projects. Please try again.', 'error', 1000);
+                } finally {
+                    // Reset button state
+                    deleteSelectedBtn.disabled = false;
+                    deleteSelectedBtn.innerHTML = `Delete Selected (<span id="deleteSelectedCount">${selectedProjects.length}</span>)`;
+                }
+            }
+        });
+        }
 
         // Close track record modal
         closeTrackRecordBtn.addEventListener('click', function() {
@@ -1540,22 +2733,22 @@ body {
 
             // Validate inputs
             if (!description) {
-                showCenteredNotification('Description cannot be empty', 'error', 3000);
+                showCenteredNotification('Description cannot be empty', 'error', 1000);
                 return;
             }
 
             if (isNaN(amount) || amount <= 0) {
-                showCenteredNotification('Please enter a valid amount', 'error', 3000);
+                showCenteredNotification('Please enter a valid amount', 'error', 1000);
                 return;
             }
 
             if (!date) {
-                showCenteredNotification('Please select a date', 'error', 3000);
+                showCenteredNotification('Please select a date', 'error', 1000);
                 return;
             }
 
             if (!projectId) {
-                showCenteredNotification('Project ID is missing', 'error', 3000);
+                showCenteredNotification('Project ID is missing', 'error', 1000);
                 return;
             }
 
@@ -1672,7 +2865,7 @@ body {
                                                             ${isVirtual ?
                                                                 (isUserAdmin ? `
                                                                     <button 
-                                                                        onclick="openEditSalariesModal(${project.id})"
+                                                                        onclick="window.location.href = '?edit_engineering=true'; openMultipleTrackRecordModal([{id: ${project.id}, name: '${project.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}'}]);"
                                                                         class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
                                                                     >
                                                                         Edit
@@ -1681,18 +2874,20 @@ body {
                                                                 :
                                                                 (isUserAdmin ? `
                                                                     <button class="edit-expense-btn bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
-    data-expense-id="${expense.id}"
-    data-description="${escapedDescription}"
-    data-amount="${expense.amount}"
-    data-date="${expense.date}"
-    data-project-id="${project.id}">
-    Edit
-</button>
-<button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
-    data-expense-id="${expense.id}"
-    data-description="${escapedDescription}">
-    Delete
-</button>
+                                                                    data-expense-id="${expense.id}"
+                                                                    data-description="${escapedDescription}"
+                                                                    data-amount="${expense.amount}"
+                                                                    data-date="${expense.date}"
+                                                                    data-project-id="${project.id}">
+                                                                    Edit
+                                                                    </button>
+
+                                                                    
+                                                                <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
+                                                                    data-expense-id="${expense.id}"
+                                                                    data-description="${escapedDescription}">
+                                                                    Delete
+                                                                </button>
                                                                 ` : '<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-xs font-medium">View Only</span>')
                                                             }   
                                                         </td>
@@ -1794,18 +2989,88 @@ if (editExpenseForm) {
     });
 }
 
-                // Setup print and receipt buttons
+                // Setup action buttons
                 const printAllBtn = document.getElementById('printAllBtn');
                 const showReceiptsBtn = document.getElementById('showReceiptsBtn');
+                const editDetailedEngineeringBtn = document.getElementById('editDetailedEngineeringBtn');
 
                 printAllBtn.onclick = function() {
                     printAllProjects(currentSelectedProjects);
                 };
 
                 showReceiptsBtn.onclick = function() {
-                    viewAllReceipts(currentSelectedProjects);
+                    openReceiptModal(null, true, currentSelectedProjects.map(p => p.id));
                 };
 
+                // Add click handler for Edit Detailed Engineering button
+                editDetailedEngineeringBtn.onclick = function() {
+                    if (currentSelectedProjects.length === 1) {
+                        loadDetailedEngineeringTeam(currentSelectedProjects[0].id);
+                    } else {
+                        showCenteredNotification('Please select exactly one project to edit the engineering team.', 'warning');
+                    }
+                };
+                
+                // When track record modal is opened, check if we should show detailed engineering instead
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('edit_engineering') === 'true' && selectedProjects.length === 1) {
+                    const projectId = selectedProjects[0].id;
+                    
+                    // Close track record modal first
+                    ModalManager.closeModal('trackRecordModal');
+                    
+                    // Small delay to allow modal to close before opening the next one
+                    setTimeout(() => {
+                        // Show the detailed engineering modal
+                        const modal = document.getElementById('editDetailedEngineeringModal');
+                        if (modal) {
+                            // Set the project ID in the modal
+                            modal.setAttribute('data-project-id', projectId);
+                            
+                            // Show loading state
+                            const teamList = document.getElementById('engineeringTeamList');
+                            teamList.innerHTML = `
+                                <div class="text-center py-8 text-gray-400">
+                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                                    <p>Loading team information...</p>
+                                </div>
+                            `;
+                            
+                            // Show the modal using the modal manager to ensure proper stacking
+                            ModalManager.openModal('editDetailedEngineeringModal');
+                            
+                            // Load the team data
+                            fetch(`/projects/${projectId}/monthly-assignments`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    renderDetailedEngineeringTeam(data.monthly_assignments || []);
+                                })
+                                .catch(error => {
+                                    console.error('Error loading team data:', error);
+                                    teamList.innerHTML = `
+                                        <div class="text-center py-8 text-red-500">
+                                            <div class="text-4xl mb-2">⚠️</div>
+                                            <p>Failed to load team information.</p>
+                                            <button onclick="loadDetailedEngineeringTeam(${projectId})" 
+                                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                                Try Again
+                                            </button>
+                                        </div>
+                                    `;
+                                });
+                            
+                            // Remove the query parameter from URL
+                            const url = new URL(window.location);
+                            url.searchParams.delete('edit_engineering');
+                            window.history.replaceState({}, '', url);
+                        } else {
+                            console.error('Detailed engineering modal not found');
+                            showCenteredNotification('Error: Could not open detailed engineering editor', 'error', 2000);
+                            // Reopen track record modal if there was an error
+                            ModalManager.openModal('trackRecordModal');
+                        }
+                    }, 300); // 300ms delay to allow modal to close
+                }
             } catch (error) {
                 console.error('Error loading track records:', error);
                 
@@ -1839,7 +3104,7 @@ if (editExpenseForm) {
                 // Wait a bit for modal to load, then trigger print
                 setTimeout(() => {
                     printReceipt();
-                }, 3000);
+                }, 1000);
                 showCenteredNotification(`Preparing to print combined receipt for ${selectedProjects.length} projects...`, 'info', 2000);
             }
         }
@@ -2175,7 +3440,7 @@ if (editExpenseForm) {
         function downloadReceiptExcel() {
             // This would trigger the Excel download functionality from the receipt pages
             if (currentReceiptData) {
-                showCenteredNotification('Excel download functionality will be implemented in the receipt view.', 'info', 3000);
+                showCenteredNotification('Excel download functionality will be implemented in the receipt view.', 'info', 1000);
             }
         }
 
@@ -2686,7 +3951,7 @@ if (editExpenseForm) {
             console.log('Opening Add Expense modal for project:', projectId, projectName);
             
             // Set the project ID in the expense form
-            const expenseForm = document.getElementById('expenseForm');
+            const expenseForm = document.getElementById('addExpenseForm');
             const expenseProjectId = document.getElementById('expenseProjectId');
             const expenseProjectName = document.getElementById('expenseProjectName');
             
@@ -2697,13 +3962,8 @@ if (editExpenseForm) {
                 // Update the project name display
                 expenseProjectName.textContent = projectName;
                 
-                // Ensure the expense form has the correct action URL
-                expenseForm.action = `/projects/${projectId}/expenses`;
-                
-                // Reset the form and set today's date
+                // Reset the form
                 expenseForm.reset();
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('expenseDate').value = today;
                 
                 // Open the modal with a slight delay to ensure smooth transition
                 setTimeout(() => {
@@ -2717,7 +3977,7 @@ if (editExpenseForm) {
                 }, 100);
             } else {
                 console.error('Expense form elements not found');
-                showCenteredNotification('Could not open expense form. Please try again.', 'error', 3000);
+                showCenteredNotification('Could not open expense form. Please try again.', 'error', 1000);
             }
         }
         
@@ -2757,7 +4017,7 @@ if (editExpenseForm) {
                     ModalManager.closeModal('addProjectModal');
                     
                     // Show success message
-                    showCenteredNotification('Project saved successfully!', 'success', 2000);
+                    showCenteredNotification('Project saved successfully!', 'success', 1000);
                     
                     // Open the add expense modal for the new project after a short delay
                     setTimeout(() => {
@@ -2768,7 +4028,7 @@ if (editExpenseForm) {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 3000);
+                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 1000);
             } finally {
                 // Reset button state
                 if (submitBtn) {
@@ -2818,17 +4078,10 @@ if (editExpenseForm) {
             
             // Close modal buttons
             const closeAddExpenseBtn = document.getElementById('closeAddExpenseModal');
-            const cancelExpenseBtn = document.getElementById('cancelExpenseBtn');
-            const addExpenseForm = document.getElementById('expenseForm');
+            const addExpenseForm = document.getElementById('addExpenseForm');
             
             if (closeAddExpenseBtn) {
                 closeAddExpenseBtn.addEventListener('click', function() {
-                    ModalManager.closeModal('addExpenseModal');
-                });
-            }
-            
-            if (cancelExpenseBtn) {
-                cancelExpenseBtn.addEventListener('click', function() {
                     ModalManager.closeModal('addExpenseModal');
                 });
             }
@@ -2859,7 +4112,7 @@ if (editExpenseForm) {
                         const data = await response.json();
                         
                         if (response.ok) {
-                            showCenteredNotification('Expense added successfully!', 'success', 3000);
+                            showCenteredNotification('Expense added successfully!', 'success', 1000);
                             addExpenseForm.reset();
                             ModalManager.closeModal('addExpenseModal');
                             
@@ -2870,7 +4123,7 @@ if (editExpenseForm) {
                         }
                     } catch (error) {
                         console.error('Error:', error);
-                        showCenteredNotification(error.message || 'An error occurred while adding the expense', 'error', 3000);
+                        showCenteredNotification(error.message || 'An error occurred while adding the expense', 'error', 1000);
                     } finally {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalText;
@@ -2883,7 +4136,7 @@ if (editExpenseForm) {
             const form = document.getElementById('projectForm');
             if (!form) {
                 console.error('Project form not found');
-                showCenteredNotification('Error: Project form not found', 'error', 3000);
+                showCenteredNotification('Error: Project form not found', 'error', 1000);
                 return;
             }
 
@@ -2894,7 +4147,7 @@ if (editExpenseForm) {
                 // Show loading state
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '&lt;span class="animate-spin mr-2"&gt;⏳&lt;/span&gt; Saving...';
+                    submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
                 }
                 
                 // Create FormData and convert to plain object
@@ -2934,7 +4187,7 @@ if (editExpenseForm) {
                 
             } catch (error) {
                 console.error('Error saving project:', error);
-                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 3000);
+                showCenteredNotification(error.message || 'An error occurred while saving the project', 'error', 1000);
             } finally {
                 // Reset button state
                 if (submitBtn) {
@@ -2957,10 +4210,171 @@ if (editExpenseForm) {
             }
         });
         
-        // Initialize expense form handling
+        // Render detailed engineering team in the modal
+        function renderDetailedEngineeringTeam(assignments) {
+            const teamList = document.getElementById('engineeringTeamList');
+            const template = document.getElementById('teamMemberTemplate');
+            const projectEngineerId = document.querySelector('#editDetailedEngineeringModal').getAttribute('data-project-engineer-id');
+            
+            if (!assignments || assignments.length === 0) {
+                teamList.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-users-slash text-3xl mb-2"></i>
+                        <p>No engineers assigned to this project yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Clear the list
+            teamList.innerHTML = '';
+            
+            // Add each team member
+            assignments.forEach(assignment => {
+                const clone = document.importNode(template.content, true);
+                const row = clone.querySelector('.team-member-row');
+                const nameElement = clone.querySelector('.engineer-name');
+                const salaryInput = clone.querySelector('.salary-input');
+                const roleSelect = clone.querySelector('.role-select');
+                const teamHeadBadge = clone.querySelector('.team-head-badge');
+                const projectEngineerBadge = clone.querySelector('.project-engineer-badge');
+                const deleteBtn = clone.querySelector('.delete-engineer-btn');
+                
+                // Set engineer data
+                row.setAttribute('data-engineer-id', assignment.engineer_id);
+                nameElement.textContent = assignment.engineer_name;
+                salaryInput.value = assignment.salary || '';
+                
+                // Set role
+                if (assignment.is_team_head) {
+                    roleSelect.value = 'head';
+                    teamHeadBadge.classList.remove('hidden');
+                } else {
+                    roleSelect.value = 'member';
+                    teamHeadBadge.classList.add('hidden');
+                }
+                
+                // Disable role selection for project engineer
+                if (assignment.engineer_id == projectEngineerId) {
+                    roleSelect.disabled = true;
+                    deleteBtn.style.display = 'none';
+                    projectEngineerBadge.classList.remove('hidden');
+                } else {
+                    projectEngineerBadge.classList.add('hidden');
+                }
+                
+                // Add event listeners
+                roleSelect.addEventListener('change', function() {
+                    const isTeamHead = this.value === 'head';
+                    teamHeadBadge.classList.toggle('hidden', !isTeamHead);
+                });
+                
+                deleteBtn.addEventListener('click', function() {
+                    row.remove();
+                });
+                
+                teamList.appendChild(clone);
+            });
+        }
+        
+        // Load detailed engineering team data
+        window.loadDetailedEngineeringTeam = function(projectId) {
+            const modal = document.getElementById('editDetailedEngineeringModal');
+            if (!modal) return;
+            
+            // Set the project ID in the modal
+            modal.setAttribute('data-project-id', projectId);
+            
+            // Show loading state
+            const teamList = document.getElementById('engineeringTeamList');
+            teamList.innerHTML = `
+                <div class="text-center py-8 text-gray-400">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p>Loading team information...</p>
+                </div>
+            `;
+            
+            // Show the modal if not already visible
+            modal.classList.remove('hidden');
+            
+            // Load the team data
+            fetch(`/projects/${projectId}/monthly-assignments`)
+                .then(response => response.json())
+                .then(data => {
+                    // Store project engineer ID in the modal for reference
+                    if (data.project_engineer_id) {
+                        modal.setAttribute('data-project-engineer-id', data.project_engineer_id);
+                    }
+                    renderDetailedEngineeringTeam(data.monthly_assignments || []);
+                })
+                .catch(error => {
+                    console.error('Error loading team data:', error);
+                    teamList.innerHTML = `
+                        <div class="text-center py-8 text-red-500">
+                            <div class="text-4xl mb-2">⚠️</div>
+                            <p>Failed to load team information.</p>
+                            <button onclick="loadDetailedEngineeringTeam(${projectId})" 
+                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                });
+        };
+        
+        // Close detailed engineering modal when clicking the close button or outside
+        document.getElementById('closeEditDetailedEngineeringModal')?.addEventListener('click', function() {
+            document.getElementById('editDetailedEngineeringModal').classList.add('hidden');
+        });
+        
+        // Close modal when clicking outside the content
+        document.getElementById('editDetailedEngineeringModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+        
+        // Handle cancel button click
+        document.getElementById('cancelEditDetailedEngineeringBtn')?.addEventListener('click', function() {
+            document.getElementById('editDetailedEngineeringModal').classList.add('hidden');
+        });
+        
+        // Handle save button click (stub for now)
+        document.getElementById('saveDetailedEngineeringBtn')?.addEventListener('click', function() {
+            const modal = document.getElementById('editDetailedEngineeringModal');
+            const projectId = modal.getAttribute('data-project-id');
+            
+            // Show loading state
+            const originalButtonText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = `
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Saving...
+            `;
+            
+            // Simulate save (replace with actual save logic)
+            setTimeout(() => {
+                // Show success message
+                showCenteredNotification('Changes saved successfully', 'success');
+                
+                // Close the modal after a short delay
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    // Reset button state
+                    this.disabled = false;
+                    this.innerHTML = originalButtonText;
+                }, 1000);
+            }, 1000);
+        });
+        
+        // Initialize detailed engineering modal
         document.addEventListener('DOMContentLoaded', function() {
             const expenseForm = document.getElementById('addExpenseForm');
-            if (!expenseForm) return;
+                console.log('Looking for expense form:', expenseForm);
+                if (!expenseForm) {
+                    console.error('Expense form not found');
+                    return;
+                }
             
             // Format amount inputs to 2 decimal places on blur
             expenseForm.addEventListener('blur', function(e) {
@@ -2975,6 +4389,8 @@ if (editExpenseForm) {
             expenseForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
+                console.log('Expense form submission started');
+                
                 // Get all amount inputs
                 const amountInputs = this.querySelectorAll('input[type="number"]');
                 let hasAmount = false;
@@ -2986,7 +4402,7 @@ if (editExpenseForm) {
                 });
                 
                 if (!hasAmount) {
-                    showCenteredNotification('Please enter at least one expense amount', 'error', 3000);
+                    showCenteredNotification('Please enter at least one expense amount', 'error', 1000);
                     return;
                 }
                 
@@ -3016,7 +4432,7 @@ if (editExpenseForm) {
                     const data = await response.json();
                     
                     if (response.ok) {
-                        showCenteredNotification('Expenses saved successfully!', 'success', 3000);
+                        showCenteredNotification('Expenses saved successfully!', 'success', 1000);
                         
                         // Reset form and close modal
                         this.reset();
@@ -3031,7 +4447,7 @@ if (editExpenseForm) {
                     }
                 } catch (error) {
                     console.error('Error saving expenses:', error);
-                    showCenteredNotification(error.message || 'An error occurred while saving expenses', 'error', 3000);
+                    showCenteredNotification(error.message || 'An error occurred while saving expenses', 'error', 1000);
                 } finally {
                     // Reset button state
                     if (submitBtn) {
@@ -3041,13 +4457,7 @@ if (editExpenseForm) {
                 }
             });
             
-            // Close modal when clicking cancel
-            const cancelBtn = document.getElementById('cancelExpenseBtn');
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', function() {
-                    ModalManager.closeModal('addExpenseModal');
-                });
-            }
+
             
             // Close modal when clicking outside the modal content
             const modal = document.getElementById('addExpenseModal');
@@ -3058,6 +4468,8 @@ if (editExpenseForm) {
                     }
                 });
             }
+
+
         });
         });
         
@@ -3067,6 +4479,36 @@ if (editExpenseForm) {
         // Show skeletons on initial load
         document.addEventListener('DOMContentLoaded', function() {
             skeletonLoader.initializeSkeletons();
+        });
+
+        // Hide TO TOP button when modals are open
+        function updateBackToTopButtonVisibility() {
+            const backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {
+                const isAnyModalOpen = document.querySelector('.fixed.inset-0:not(.hidden)') !== null;
+                if (isAnyModalOpen) {
+                    backToTopBtn.style.display = 'none';
+                } else {
+                    backToTopBtn.style.display = 'block';
+                }
+            }
+        }
+
+        // Monitor modal state changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    updateBackToTopButtonVisibility();
+                }
+            });
+        });
+
+        // Observe all modal elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const modals = document.querySelectorAll('.fixed.inset-0');
+            modals.forEach(modal => {
+                observer.observe(modal, { attributes: true });
+            });
         });
         
         // Integrate skeleton loading with existing loading functions
@@ -3414,127 +4856,9 @@ function performAjaxWithLoading(options) {
     });
 }
 
-function openEditSalariesModal(projectId) {
-    window.currentEditSalariesProjectId = projectId;
-    ModalManager.openModal('editSalariesModal');
-    fetch(`/projects/${projectId}/team-salaries`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('salariesTableBody');
-            tbody.innerHTML = '';
-            const team = Array.isArray(data.team) ? data.team : [];
-            if (!team.length) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No team members with salaries for this month.</td></tr>';
-            } else {
-                team.forEach(member => {
-                    if (!member || typeof member.salary === 'undefined') return;
-                    tbody.innerHTML += `
-                        <tr data-id="${member.id}">
-                            <td class="p-2">${member.name}</td>
-                            <td class="p-2"><input type="number" value="${member.salary}" class="salary-input border rounded px-2 py-1 w-24"></td>
-                            <td class="p-2">
-                                <button class="save-btn bg-green-500 text-white px-2 py-1 rounded mr-2">Save</button>
-                                <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
 
-            // Save handler
-            tbody.querySelectorAll('.save-btn').forEach(btn => {
-                btn.onclick = function() {
-                    const tr = btn.closest('tr');
-                    const engineerId = tr.getAttribute('data-id');
-                    const input = tr.querySelector('.salary-input');
-                    const salary = input.value;
-                    btn.disabled = true;
-                    btn.textContent = 'Saving...';
-                    fetch(`/projects/${projectId}/team-salaries/${engineerId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ salary })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-    showCenteredNotification('Salary updated!', 'success', 2000);
-    // Real-time update: Refresh track record modal if open and this project is selected
-    if (typeof trackRecordModal !== 'undefined' && !trackRecordModal.classList.contains('hidden') &&
-        typeof currentSelectedProjects !== 'undefined' &&
-        currentSelectedProjects.some(p => p.id == projectId)) {
-        setTimeout(() => {
-            openMultipleTrackRecordModal(currentSelectedProjects);
-        }, 500);
-    }
-} else {
-    showCenteredNotification('Failed to update salary.', 'error', 2000);
-}
-                    })
-                    .catch(() => showCenteredNotification('Error updating salary.', 'error', 2000))
-                    .finally(() => {
-                        btn.disabled = false;
-                        btn.textContent = 'Save';
-                    });
-                };
-            });
 
-            // Delete handler
-            tbody.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.onclick = function() {
-                    const tr = btn.closest('tr');
-                    const engineerId = tr.getAttribute('data-id');
-                    btn.disabled = true;
-                    btn.textContent = 'Deleting...';
-                    fetch(`/projects/${projectId}/team-salaries/${engineerId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success !== false) {
-    tr.remove();
-    showCenteredNotification('Engineer removed from team.', 'success', 2000);
-    // Real-time update: Refresh track record modal if open and this project is selected
-    if (typeof trackRecordModal !== 'undefined' && !trackRecordModal.classList.contains('hidden') &&
-        typeof currentSelectedProjects !== 'undefined' &&
-        currentSelectedProjects.some(p => p.id == projectId)) {
-        setTimeout(() => {
-            openMultipleTrackRecordModal(currentSelectedProjects);
-        }, 500);
-    }
-} else {
-    showCenteredNotification('Failed to remove engineer.', 'error', 2000);
-}
-                    })
-                    .catch(() => showCenteredNotification('Error removing engineer.', 'error', 2000))
-                    .finally(() => {
-                        // No need to re-enable/delete button after row removal
-                    });
-                };
-            });
-        });
-}
 
-function closeEditSalariesModal() {
-    ModalManager.closeModal('editSalariesModal');
-    // After closing salaries modal, refresh track record if open and this project is selected
-    if (typeof trackRecordModal !== 'undefined' && !trackRecordModal.classList.contains('hidden') &&
-        typeof currentSelectedProjects !== 'undefined' &&
-        currentSelectedProjects.length === 1 &&
-        currentSelectedProjects[0].id == window.currentEditSalariesProjectId) {
-        setTimeout(() => {
-            openMultipleTrackRecordModal(currentSelectedProjects);
-        }, 500);
-    }
-}
 
 
 </script>
@@ -3555,5 +4879,11 @@ function closeEditSalariesModal() {
 </div>
 
     </div> <!-- Close main content div -->
+    
+    @include('projects.partials.edit_detailed_engineering_modal')
+    
+    <!-- Load Detailed Engineering JavaScript -->
+    <script src="{{ asset('js/detailed-engineering.js') }}"></script>
+    
 </body>
 </html>

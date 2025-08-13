@@ -315,8 +315,12 @@ class ProjectController extends Controller
 
         // Create a virtual "Detailed Engineering" expense if there are engineer salaries
         $allExpenses = $expenses->toArray();
-        if ($detailedEngineeringCost > 0) {
-            // Add virtual detailed engineering expense
+        
+        // Check if there's already a "Detailed Engineering" expense in the database
+        $hasDetailedEngineeringExpense = $expenses->where('description', 'Detailed Engineering')->count() > 0;
+        
+        if ($detailedEngineeringCost > 0 && !$hasDetailedEngineeringExpense) {
+            // Add virtual detailed engineering expense only if it doesn't exist
             $detailedEngineeringExpense = [
                 'id' => 'detailed_engineering',
                 'project_id' => $project->id,
@@ -342,6 +346,34 @@ class ProjectController extends Controller
                 'expense_count' => count($allExpenses),
                 'percent_used' => $project->budget > 0 ? ($project->totalSpentWithDetailedEngineering() / $project->budget) * 100 : 0
             ]
+        ]);
+    }
+
+    public function getMonthlyAssignments(Project $project)
+    {
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
+
+        $monthlyAssignments = $project->monthlyAssignments()
+            ->where('year', $currentYear)
+            ->where('month', $currentMonth)
+            ->with('engineer')
+            ->get()
+            ->map(function($assignment) {
+                return [
+                    'engineer_id' => $assignment->engineer_id,
+                    'engineer_name' => $assignment->engineer->name,
+                    'is_team_head' => $assignment->is_team_head,
+                    'salary' => $assignment->salary,
+                    'assigned_at' => $assignment->assigned_at
+                ];
+            });
+
+        return response()->json([
+            'project_id' => $project->id,
+            'project_name' => $project->name,
+            'project_engineer_id' => $project->project_engineer_id,
+            'monthly_assignments' => $monthlyAssignments
         ]);
     }
 

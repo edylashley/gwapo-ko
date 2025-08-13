@@ -1,1 +1,11 @@
-in the project page, i want you to remove the add expense button in the project cards. In the add new project modal, add a proceed to add expense button on the right corner below, then it will proceed to the add expense modal. There it will have 5 fields (materials, labor, fuel/oil/equipment, miscellaaneous & contingencies, and others) which the user will just add amount to each of them. Then there will be Add Salary button, that will open next modal, where the project engineer and team members (team head and normal members) will be set there. That add salary modal will serve as the sixth expense under the detailed engineering description name in the receipt and track record.
+
+
+- Engineer assignment bug (fix when project eng. already, cant be a team member)
+- Add editable and deleteable salary modal for each team member detailed engineering description
+
+- Adjust project cards sizes for less screen space consumption
+
+
+- after adding project/after adding expense, when closing the modal, it should add directly to the project page without refreshing the page
+
+- when removing an engineer from the team assignment page, the value of detailed engineering from the track record should be updated

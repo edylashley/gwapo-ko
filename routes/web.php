@@ -103,10 +103,10 @@ Route::post('/test-form', function(\Illuminate\Http\Request $request) {
 
 
 // Expense routes - View for all users, modify for admins only
-Route::get('/expenses', [ExpenseController::class, 'index'])->middleware('auth');
-Route::post('/expenses', [ExpenseController::class, 'store'])->middleware(['auth', 'admin']);
-Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->middleware(['auth', 'admin']);
-Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware(['auth', 'admin']);
+Route::get('/expenses', [ExpenseController::class, 'index'])->middleware('auth')->name('expenses.index');
+Route::post('/expenses', [ExpenseController::class, 'store'])->middleware(['auth', 'admin'])->name('expenses.store');
+Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->middleware(['auth', 'admin'])->name('expenses.update');
+Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->middleware(['auth', 'admin'])->name('expenses.destroy');
 
 // Dashboard API routes
 Route::get('/api/dashboard/statistics', [App\Http\Controllers\Api\DashboardController::class, 'statistics'])->middleware('auth');
@@ -130,8 +130,15 @@ Route::get('/projects/recently-deleted', [ProjectController::class, 'recentlyDel
 Route::post('/projects/{id}/restore', [ProjectController::class, 'restore'])->middleware(['auth', 'admin'])->name('projects.restore');
 Route::delete('/projects/{id}/force-delete', [ProjectController::class, 'forceDelete'])->middleware(['auth', 'admin'])->name('projects.force-delete');
 Route::get('/projects/{project}/track-record', [ProjectController::class, 'trackRecord'])->middleware('auth')->name('projects.track-record');
+Route::get('/projects/{project}/monthly-assignments', [ProjectController::class, 'getMonthlyAssignments'])->middleware('auth')->name('projects.monthly-assignments');
+Route::get('/projects/batch', [ProjectController::class, 'getBatch'])->middleware('auth')->name('projects.batch');
 Route::get('/projects/{project}/receipt', [ProjectController::class, 'receipt'])->middleware('auth')->name('projects.receipt');
 Route::post('/projects/multiple-receipts', [ProjectController::class, 'multipleReceipts'])->middleware('auth')->name('projects.multiple-receipts');
+
+// Project expense routes
+Route::get('/projects/{project}/expenses/{expense}/team-members', [ProjectController::class, 'getExpenseTeamMembers'])->middleware('auth')->name('projects.expenses.team-members');
+Route::put('/projects/{project}/expenses/{expense}', [ExpenseController::class, 'update'])->middleware(['auth', 'admin'])->name('projects.expenses.update');
+Route::delete('/projects/{project}/expenses/{expense}/team-members/{engineer}', [ProjectController::class, 'removeExpenseTeamMember'])->middleware(['auth', 'admin'])->name('projects.expenses.team-members.remove');
 
 Route::get('/projects/archive', [ProjectController::class, 'archivePage'])->middleware('auth');
 // Only admins can archive, and use POST for mutating
@@ -145,6 +152,8 @@ Route::get('/monthly-assignments', [MonthlyAssignmentController::class, 'index']
 Route::post('/monthly-assignments/assign', [MonthlyAssignmentController::class, 'assign'])->middleware(['auth', 'admin'])->name('monthly-assignments.assign');
 Route::post('/monthly-assignments/set-team-head', [MonthlyAssignmentController::class, 'setTeamHead'])->middleware(['auth', 'admin'])->name('monthly-assignments.set-team-head');
 Route::post('/monthly-assignments/update-salary', [MonthlyAssignmentController::class, 'updateSalary'])->middleware(['auth', 'admin'])->name('monthly-assignments.update-salary');
+Route::post('/monthly-assignments/create-salary', [MonthlyAssignmentController::class, 'createSalaryAssignment'])->middleware(['auth', 'admin'])->name('monthly-assignments.create-salary');
+Route::post('/monthly-assignments/update-salary', [MonthlyAssignmentController::class, 'updateSalaryAssignment'])->middleware(['auth', 'admin'])->name('monthly-assignments.update-salary');
 Route::delete('/monthly-assignments/remove-engineer', [MonthlyAssignmentController::class, 'removeEngineer'])->middleware(['auth', 'admin'])->name('monthly-assignments.remove-engineer');
 Route::delete('/monthly-assignments/remove', [MonthlyAssignmentController::class, 'remove'])->middleware(['auth', 'admin'])->name('monthly-assignments.remove');
 

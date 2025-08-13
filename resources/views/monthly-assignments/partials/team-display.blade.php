@@ -27,11 +27,7 @@
                                     id="salary_{{ $project->id }}_{{ $teamHead->engineer->id }}_{{ $year }}_{{ $assignmentMonth }}"
                                 >
                                 <span class="text-xs text-blue-600">₱</span>
-                                <button
-                                    onclick="applySalary({{ $project->id }}, {{ $teamHead->engineer->id }}, {{ $year }}, {{ $assignmentMonth }}, '{{ $teamHead->engineer->name }}')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors font-medium">
-                                    Apply
-                                </button>
+                                
                             </div>
                         @else
                             @if($teamHead->salary)

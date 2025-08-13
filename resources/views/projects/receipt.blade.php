@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -465,7 +466,7 @@
                 ['Remaining:', "₱{{ number_format($summary['remaining_budget'], 2) }}"],
                 ['Usage:', "{{ number_format($summary['percent_used'], 1) }}%"],
                 [''],
-                // Engineer Assignments Section
+                  // Engineer Assignments Section
                 ['ENGINEER ASSIGNMENTS'],
                 @if($project->projectEngineer)
                     ['Project Engineer:', "{{ $project->projectEngineer->name }}"],

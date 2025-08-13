@@ -258,4 +258,159 @@ class MonthlyAssignmentController extends Controller
             return response()->json(['success' => false, 'message' => 'Error updating salary']);
         }
     }
+    
+
+    // Create salary and team assignment from expense modal
+    public function createSalaryAssignment(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'project_engineer_id' => 'required|exists:engineers,id',
+            'team_members' => 'required|array|min:1',
+            'team_members.*' => 'exists:engineers,id',
+            'team_head' => 'required|exists:engineers,id',
+            'individual_salaries' => 'required|array',
+            'individual_salaries.*' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $currentYear = now()->year;
+            $currentMonth = now()->month;
+
+            // Create or update project engineer assignment
+            $project = Project::find($request->project_id);
+            $project->update(['project_engineer_id' => $request->project_engineer_id]);
+
+            // Calculate total salary from individual salaries
+            $individualSalaries = $request->individual_salaries;
+            $totalSalary = 0;
+            
+            foreach ($request->team_members as $engineerId) {
+                if (isset($individualSalaries[$engineerId])) {
+                    $totalSalary += floatval($individualSalaries[$engineerId]);
+                }
+            }
+
+            // Create monthly assignments for all team members with individual salaries
+            foreach ($request->team_members as $engineerId) {
+                $isTeamHead = ($engineerId == $request->team_head);
+                $individualSalary = floatval($individualSalaries[$engineerId] ?? 0);
+                
+                MonthlyAssignment::updateOrCreate(
+                    [
+                        'project_id' => $request->project_id,
+                        'engineer_id' => $engineerId,
+                        'year' => $currentYear,
+                        'month' => $currentMonth,
+                    ],
+                    [
+                        'is_team_head' => $isTeamHead,
+                        'salary' => $individualSalary,
+                        'assigned_at' => now(),
+                    ]
+                );
+            }
+
+            // Create expense record for Detailed Engineering (sixth expense)
+            \App\Models\Expense::create([
+                'project_id' => $request->project_id,
+                'description' => 'Detailed Engineering',
+                'amount' => $totalSalary,
+                'date' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Salary and team assignment created successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating salary and team assignment. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Update salary and team assignment
+    public function updateSalaryAssignment(Request $request)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'project_engineer_id' => 'required|exists:engineers,id',
+            'edit_team_members' => 'required|array|min:1',
+            'edit_team_members.*' => 'exists:engineers,id',
+            'edit_team_head' => 'required|exists:engineers,id',
+            'edit_individual_salaries' => 'required|array',
+            'edit_individual_salaries.*' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $currentYear = now()->year;
+            $currentMonth = now()->month;
+
+            // Update project engineer
+            $project = Project::find($request->project_id);
+            $project->update(['project_engineer_id' => $request->project_engineer_id]);
+
+            // Calculate total salary from individual salaries
+            $individualSalaries = $request->edit_individual_salaries;
+            $totalSalary = 0;
+            
+            foreach ($request->edit_team_members as $engineerId) {
+                if (isset($individualSalaries[$engineerId])) {
+                    $totalSalary += floatval($individualSalaries[$engineerId]);
+                }
+            }
+
+            // Remove all existing assignments for this project/month
+            MonthlyAssignment::where('project_id', $request->project_id)
+                ->where('year', $currentYear)
+                ->where('month', $currentMonth)
+                ->delete();
+
+            // Create new monthly assignments for all team members with individual salaries
+            foreach ($request->edit_team_members as $engineerId) {
+                $isTeamHead = ($engineerId == $request->edit_team_head);
+                $individualSalary = floatval($individualSalaries[$engineerId] ?? 0);
+                
+                MonthlyAssignment::create([
+                    'project_id' => $request->project_id,
+                    'engineer_id' => $engineerId,
+                    'year' => $currentYear,
+                    'month' => $currentMonth,
+                    'is_team_head' => $isTeamHead,
+                    'salary' => $individualSalary,
+                    'assigned_at' => now(),
+                ]);
+            }
+
+            // Update or create the "Detailed Engineering" expense
+            $existingExpense = \App\Models\Expense::where('project_id', $request->project_id)
+                ->where('description', 'Detailed Engineering')
+                ->first();
+
+            if ($existingExpense) {
+                $existingExpense->update(['amount' => $totalSalary]);
+            } else {
+                \App\Models\Expense::create([
+                    'project_id' => $request->project_id,
+                    'description' => 'Detailed Engineering',
+                    'amount' => $totalSalary,
+                    'date' => now(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Team and salary assignment updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating team and salary assignment. Please try again.'
+            ], 500);
+        }
+    }
 }
