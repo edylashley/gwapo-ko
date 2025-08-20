@@ -242,10 +242,11 @@ body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
     border: 1px solid #e5e7eb !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    z-index: 50 !important;
-    overflow: hidden !important;
+    z-index: 9999 !important;
+    overflow: visible !important;
     display: block !important;
     transform-origin: top right !important;
+    pointer-events: auto !important;
 }
 
 .dropdown-menu.hidden {
@@ -272,26 +273,53 @@ body {
     padding: 12px 20px !important;
     margin: 2px 8px !important;
     border-radius: 8px !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     cursor: pointer !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.dropdown-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(5, 150, 105, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
 }
 
 .dropdown-item:hover {
     background: #f8fafc !important;
     background-color: #f8fafc !important;
-    transform: translateX(-4px) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    transform: translateX(-6px) scale(1.01) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
     color: #1f2937 !important;
-    transition: transform 0.2s ease-in-out, background 0.2s, box-shadow 0.2s, color 0.2s !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.dropdown-item:hover::before {
+    transform: translateX(0);
 }
 
 .dropdown-item:hover svg {
     color: #059669 !important;
-    transform: scale(1.1) !important;
+    transform: translateX(2px) scale(1.1) !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease !important;
 }
 
 .dropdown-item:active {
-    transform: translateX(2px) scale(0.98) !important;
+    transform: translateX(-2px) scale(0.99) !important;
+    transition: transform 0.1s ease-out !important;
+}
+
+/* Add smooth transition for the dropdown menu */
+.dropdown-menu {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform-origin: top right !important;
 }
 
 .dropdown-divider {

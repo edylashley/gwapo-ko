@@ -47,6 +47,12 @@ class Project extends Model
         return $this->hasMany(MonthlyAssignment::class);
     }
 
+    // Relationship with detailed engineering team members
+    public function detailedEngineeringTeam()
+    {
+        return $this->hasMany(MonthlyAssignment::class);
+    }
+
     // Accessor for current month's detailed engineering team (with salary)
     public function getDetailedEngineeringTeamAttribute()
     {
@@ -156,18 +162,35 @@ class Project extends Model
         return ($this->totalSpentWithDetailedEngineering() / $this->budget) * 100;
     }
 
-    // Calculate total detailed engineering cost (sum of all engineer salaries)
+    // Calculate total detailed engineering cost (sum of distinct engineer salaries)
     public function getDetailedEngineeringCost()
     {
-        return $this->monthlyAssignments()
+        // Get the latest salary for each engineer
+        $latestSalaries = $this->monthlyAssignments()
+            ->select('engineer_id', \DB::raw('MAX(created_at) as latest_date'))
             ->whereNotNull('salary')
-            ->sum('salary');
+            ->groupBy('engineer_id')
+            ->get()
+            ->map(function($item) {
+                return $this->monthlyAssignments()
+                    ->where('engineer_id', $item->engineer_id)
+                    ->where('created_at', $item->latest_date)
+                    ->first();
+            });
+            
+        return $latestSalaries->sum('salary');
     }
 
     // Calculate total spent including detailed engineering
     public function totalSpentWithDetailedEngineering()
     {
-        return $this->totalSpent() + $this->getDetailedEngineeringCost();
+        // Get regular expenses (excluding any that might be marked as detailed engineering)
+        $regularExpenses = $this->expenses()
+            ->where('description', '!=', 'Detailed Engineering')
+            ->sum('amount');
+            
+        // Add detailed engineering costs
+        return $regularExpenses + $this->getDetailedEngineeringCost();
     }
 
     // Calculate remaining budget including detailed engineering

@@ -150,7 +150,7 @@
     @include('components.navigation', ['pageTitle' => 'System Settings'])
 
     <!-- Main Content -->
-    <div class="main-content px-4 pt-6 pb-10 mt-24 transition-all duration-300 ml-64" id="mainContent">
+    <div class="main-content px-4 pt-6 pb-10 mt-4 transition-all duration-300 ml-64" id="mainContent">
             <div class="max-w-7xl  mx-auto">
                 
                 <!-- Header Section -->

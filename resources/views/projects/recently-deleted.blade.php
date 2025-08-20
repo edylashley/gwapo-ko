@@ -163,23 +163,18 @@
     <!-- Main Content -->
     <div class="main-content px-4 pt-6 pb-10 transition-all duration-300" style="margin-left: 256px;" id="mainContent">
     <div class="max-w-7xl mx-auto">
-        <!-- Info Banner -->
-        <div class="glass-card card-delay-1 p-6 mb-8">
-            <div class="flex items-center space-x-4">
-                <div class="text-4xl">⚠️</div>
-                <div>
-                    <h2 class="text-xl font-bold text-white mb-2">Recently Deleted Projects</h2>
-                    <p class="text-red-100">Projects deleted within the last 30 days. After 30 days, projects are permanently deleted and cannot be recovered.</p>
-                </div>
-            </div>
-        </div>
+ 
 
     <div class="container mx-auto">
         <!-- Page Header -->
         <div class="glass-card card-delay-1 p-6 mb-8">
-            <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Recently Deleted Projects</h1>
-                <p class="text-green-100">Projects deleted within the last 30 days. You can restore or permanently delete them.</p>
+            <div class="flex items-center space-x-4">
+                <div class="text-4xl">⚠️</div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-white mb-2">Recently Deleted Projects</h1>
+                        <p class="text-green-100">Projects deleted within the last 30 days. You can restore or permanently delete them.</p>
+                    </div>
+                </div>  
             </div>
         </div>
 
@@ -194,9 +189,35 @@
 
         <!-- Deleted Projects Grid -->
         @if($deletedProjects->count() > 0)
+            <!-- Bulk Action Bar -->
+            <div id="bulkActionBar" class="glass-card card-delay-1 p-4 mb-4 hidden">
+                <div class="flex flex-wrap items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="selectAllCheckbox" class="w-5 h-5 text-green-400 rounded border-2 border-white border-opacity-30 bg-white bg-opacity-10 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-200">
+                            <span class="ml-2 text-white font-medium">Select All</span>
+                        </label>
+                        <span class="text-white">
+                            <span id="selectedCount">0</span> project(s) selected
+                        </span>
+                    </div>
+                    <div class="flex space-x-2 mt-2 sm:mt-0">
+                        <button id="bulkDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center" disabled>
+                            <i class="fas fa-trash-alt mr-1"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div id="deletedProjectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($deletedProjects as $project)
-                    <div class="glass-card card-delay-{{ $loop->index % 3 + 1 }} p-6 deleted-project-card">
+                    <div class="glass-card card-delay-{{ $loop->index % 3 + 1 }} p-6 deleted-project-card relative group">
+                        <!-- Checkbox -->
+                        <div class="absolute top-3 right-3">
+                            <input type="checkbox" 
+                                   class="project-checkbox w-5 h-5 rounded border-2 border-white border-opacity-30 bg-white bg-opacity-10 focus:ring-0 focus:ring-offset-0 text-green-400 cursor-pointer transition-all duration-200 transform scale-75 group-hover:scale-100"
+                                   value="{{ $project->id }}">
+                        </div>
                         <div class="flex items-start justify-between mb-4">
                             <div>
                                 <h3 class="text-xl font-bold text-white mb-2">{{ $project->name }}</h3>
@@ -243,6 +264,125 @@
     </div>
 
     <script>
+        // Bulk selection functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.project-checkbox');
+            const bulkActionBar = document.getElementById('bulkActionBar');
+            const selectedCount = document.getElementById('selectedCount');
+            const bulkRestoreBtn = document.getElementById('bulkRestoreBtn');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+            // Toggle bulk action bar
+            function toggleBulkActionBar() {
+                const checkedBoxes = document.querySelectorAll('.project-checkbox:checked');
+                const allCheckboxes = document.querySelectorAll('.project-checkbox');
+                const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+                
+                // Update selected count
+                selectedCount.textContent = checkedBoxes.length;
+                
+                // Toggle bulk action bar visibility
+                if (checkedBoxes.length > 0) {
+                    bulkActionBar.classList.remove('hidden');
+                    bulkDeleteBtn.disabled = false;
+                } else {
+                    bulkActionBar.classList.add('hidden');
+                    bulkDeleteBtn.disabled = true;
+                }
+                
+                // Update select all checkbox state
+                if (checkedBoxes.length === allCheckboxes.length && allCheckboxes.length > 0) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkedBoxes.length > 0) {
+                    selectAllCheckbox.indeterminate = true;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            }
+
+            // Handle individual checkbox changes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', toggleBulkActionBar);
+            });
+
+            // Bulk delete
+            bulkDeleteBtn.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.project-checkbox:checked'))
+                    .map(checkbox => checkbox.value);
+                
+                showCenteredConfirm(
+                    `WARNING: This will permanently delete ${selectedIds.length} project(s) and all associated data. This action cannot be undone.`,
+                    () => {
+                        deleteProjects(selectedIds);
+                    }
+                );
+            });
+
+            // Toggle all checkboxes
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const allCheckboxes = document.querySelectorAll('.project-checkbox');
+                    allCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    toggleBulkActionBar();
+                });
+            }
+        });
+
+        // Bulk restore projects
+        async function restoreProjects(ids) {
+            try {
+                const response = await fetch('/projects/bulk-restore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to restore projects');
+                }
+            } catch (error) {
+                console.error('Error restoring projects:', error);
+                showCenteredNotification(error.message || 'An error occurred while restoring projects', 'error', 3000);
+            }
+        }
+
+        // Bulk delete projects
+        async function deleteProjects(ids) {
+            try {
+                const response = await fetch('/projects/bulk-force-delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ ids })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete projects');
+                }
+            } catch (error) {
+                console.error('Error deleting projects:', error);
+                showCenteredNotification(error.message || 'An error occurred while deleting projects', 'error', 3000);
+            }
+        }
+
         // Custom centered confirmation dialog
         function showCenteredConfirm(message, onConfirm, onCancel = null) {
             const overlay = document.createElement('div');
@@ -380,6 +520,7 @@
         });
 
         // Restore project function
+        // Single project restore (kept for backward compatibility)
         async function restoreProject(id) {
             // Disable the restore button to prevent double-clicks
             const restoreBtn = document.querySelector(`[data-project-id="${id}"].restore-project-btn`);
@@ -477,6 +618,7 @@
         }
 
         // Force delete project function
+        // Single project delete (kept for backward compatibility)
         async function forceDeleteProject(id) {
             // Disable the delete button to prevent double-clicks
             const deleteBtn = document.querySelector(`[data-project-id="${id}"].force-delete-project-btn`);

@@ -120,22 +120,22 @@
             <div class="glass-card card-delay-2 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-gray-300">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">User</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">Contact</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black text-center uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-black text-center uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-green-200 divide-y divide-gray-200">
                             @forelse($users as $user)
                                 <tr class="hover:bg-opacity-20 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-white">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-gray-600 bg-opacity-20 rounded-full flex items-center justify-center text-green-500 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 hover:rotate-3">
+                                            <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-green-500 font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 hover:rotate-3">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                             <div class="ml-4">

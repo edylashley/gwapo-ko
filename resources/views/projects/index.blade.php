@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Project Management - Budget Control</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
@@ -164,32 +165,34 @@ body {
             </div>
             <!-- Total Budget -->
             <div class="glass-card card-delay-2 flex items-center p-6">
-                <div class="bg-green-100 text-green-600 rounded-full p-3 mr-4">
+                <div class="bg-blue-100 text-blue-600 rounded-full p-3 mr-4">
                     <span class="text-2xl">💰</span>
                 </div>
                 <div>
                     <div class="text-gray-100 text-sm uppercase mb-1">Total Budget</div>
-                    <div id="totalBudgetCard" class="text-2xl font-bold text-green-100 drop-shadow">₱{{ number_format($projects->sum('budget')) }}</div>
+                    <div id="totalBudgetCard" class="text-2xl font-bold text-blue-100 drop-shadow">₱{{ number_format($totalBudget) }}</div>
                 </div>
             </div>
-            <!-- Active Projects -->
+            <!-- Total Spent -->
             <div class="glass-card card-delay-3 flex items-center p-6">
                 <div class="bg-yellow-100 text-yellow-600 rounded-full p-3 mr-4">
-                    <span class="text-2xl">⚡</span>
+                    <span class="text-2xl">💸</span>
                 </div>
                 <div>
-                    <div class="text-gray-100 text-sm uppercase mb-1">Active Projects</div>
-                    <div id="activeProjectsCard" class="text-2xl font-bold text-yellow-100 drop-shadow">{{ count($projects) }}</div>
+                    <div class="text-gray-100 text-sm uppercase mb-1">Total Spent</div>
+                    <div id="totalSpentCard" class="text-2xl font-bold text-yellow-100 drop-shadow">₱{{ number_format($totalSpent, 2) }}</div>
                 </div>
             </div>
-            <!-- Average Budget -->
+            <!-- Remaining Budget -->
             <div class="glass-card card-delay-1 flex items-center p-6">
-                <div class="bg-purple-100 text-purple-600 rounded-full p-3 mr-4">
-                    <span class="text-2xl font-bold">AVG</span>
+                <div class="bg-{{ $remainingBudget < 0 ? 'red' : 'green' }}-100 text-{{ $remainingBudget < 0 ? 'red' : 'green' }}-600 rounded-full p-3 mr-4">
+                    <span class="text-2xl">{{ $remainingBudget < 0 ? '⚠️' : '✅' }}</span>
                 </div>
                 <div>
-                    <div class="text-gray-100 text-sm uppercase mb-1">Avg Budget</div>
-                    <div id="avgBudgetCard" class="text-2xl font-bold text-purple-100 drop-shadow">₱{{ count($projects) > 0 ? number_format($projects->avg('budget')) : '0' }}</div>
+                    <div class="text-gray-100 text-sm uppercase mb-1">Remaining Budget</div>
+                    <div id="remainingBudgetCard" class="text-2xl font-bold text-{{ $remainingBudget < 0 ? 'red' : 'green' }}-100 drop-shadow">
+                        ₱{{ number_format($remainingBudget, 2) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -344,7 +347,7 @@ body {
         </div>
         
         <!-- Projects Grid - Single Column for Wider Cards -->
-        <div id="projectsGrid" class="grid grid-cols-1 gap-6 mb-16 mt-4 max-w-6xl mx-auto">
+        <div id="projectsGrid" class="grid grid-cols-2 gap-6 mb-16 mt-4 max-w-8xl mx-auto">
             @forelse($projects as $project)
                 @php
                     $totalSpent = $project->totalSpentWithDetailedEngineering();
@@ -362,21 +365,41 @@ body {
                         $cardClass .= ' border-green-400 bg-green-900 bg-opacity-10';
                     }
                 @endphp
-                <div class="glass-card card-delay-1 p-4 relative project-card">
-                    <!-- Project Header -->
-                    <div class="flex items-start mb-4">
-                        <!-- Checkbox -->
-                        <div class="mr-3 mt-1">
-                            <input type="checkbox"
-                                   class="project-checkbox w-5 h-5 text-emerald-600 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-emerald-500 focus:ring-2"
-                                   data-project-id="{{ $project->id }}"
-                                   data-project-name="{{ $project->name }}">
+                <div class="glass-card card-delay-1 p-4 relative project-card group">
+                    <!-- Checkbox (Top-left corner) -->
+                    <div class="absolute top-3 left-3">
+                        <input type="checkbox"
+                               class="project-checkbox w-4 h-4 text-emerald-600 bg-white bg-opacity-20 border-2 border-white border-opacity-30 rounded focus:ring-emerald-500 focus:ring-2"
+                               data-project-id="{{ $project->id }}"
+                               data-project-name="{{ $project->name }}">
+                    </div>
+                    
+                    <!-- Three-dot menu -->
+                    <div class="absolute top-3 right-3">
+                        <button class="three-dot-menu p-0 text-gray-300 hover:text-white focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                            </svg>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div class="hidden group-hover:block absolute right-0 mt-2 bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-700 px-2 py-1">
+                            <button class="archive-project-btn px-4 py-2 text-sm text-gray-300 text-center hover:bg-gray-700 rounded-lg block w-auto">
+                                Archive
+                            </button>
+                            <button class="delete-project-btn px-4 py-2 text-sm text-red-400 text-center hover:bg-gray-700 rounded-lg block w-auto">
+                                Delete
+                            </button>
                         </div>
-                        <!-- Centered Project Information -->
-                        <div class="flex-1 text-center">
-                            <h3 class="text-xl font-bold text-white mb-1 leading-tight project-name">{{ $project->name }}</h3>
-                            <div class="text-2xl font-bold text-green-200 mb-1">₱{{ number_format($project->budget) }}</div>
-                            <p class="text-gray-300 text-sm mb-1 fpp-code">F/P/P Code: {{ $project->fpp_code ?? 'Not Set' }}</p>
+                    </div>
+                    
+                    <!-- Project Information (Centered) -->
+                    <div class="flex flex-col items-center mb-2">
+                        <div class="text-center w-full">
+                            <h3 class="text-base font-bold px-3 text-white mb-1 line-clamp-1">{{ $project->name }}</h3>
+                            <p class="text-gray-300 text-xs mb-1">F/P/P: {{ $project->fpp_code ?? 'N/A' }}</p>
+                            <div class="text-lg font-bold text-green-200 mb-2">₱{{ number_format($project->budget) }}</div>
+                            
+                            <!-- Project Engineer -->
                             @if($project->projectEngineer)
                                 <div class="text-green-200 text-sm flex items-center justify-center">
                                     <span class="mr-1">👷</span>
@@ -394,92 +417,11 @@ body {
                         </div>
                     </div>
 
-                    <!-- Budget Status Warning -->
-                    @if($isOverBudget)
-                        <div class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold mb-4 flex items-center">
-                            ⚠️ Over Budget by ₱{{ number_format(abs($remaining)) }}
-                        </div>
-                    @elseif($isNearBudget)
-                        <div class="bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-bold mb-4 flex items-center">
-                            ⚡ {{ number_format($percentUsed, 1) }}% Budget Used
-                        </div>
-                    @endif
-
-                    <!-- Budget Details Grid -->
-                    <div class="grid grid-cols-3 gap-4 mb-4">
-                        <div class="text-center bg-white bg-opacity-5 rounded-lg p-4">
-                            <div class="text-2xl font-bold {{ $isOverBudget ? 'text-red-400' : 'text-white' }}">
-                                ₱{{ number_format($totalSpent) }}
-                            </div>
-                            <div class="text-sm text-gray-300 mt-1">Total Spent</div>
-                        </div>
-                        <div class="text-center bg-white bg-opacity-5 rounded-lg p-4">
-                            <div class="text-2xl font-bold {{ $remaining < 0 ? 'text-red-400' : 'text-white' }}">
-                                ₱{{ number_format($remaining) }}
-                            </div>
-                            <div class="text-sm text-gray-300 mt-1">Remaining</div>
-                        </div>
-                        <div class="text-center bg-white bg-opacity-5 rounded-lg p-4">
-                            <div class="text-2xl font-bold text-white">
-                                {{ $project->expenses()->count() + ($project->getDetailedEngineeringCost() > 0 ? 1 : 0) }}
-                            </div>
-                            <div class="text-sm text-gray-300 mt-1">Expenses</div>
-                        </div>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="mb-6">
-                        <!-- Progress Bar Labels -->
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-medium text-white">Budget Usage</span>
-                            <span class="text-sm font-bold {{ $isOverBudget ? 'text-red-300' : ($isNearBudget ? 'text-yellow-300' : 'text-green-300') }}">
-                                {{ number_format($percentUsed, 1) }}%
-                            </span>
-                        </div>
-
-                        <!-- Progress Bar -->
-                        <div class="w-full bg-gray-500 rounded-full h-4 relative">
-                            <div class="h-4 rounded-full transition-all duration-300 {{ $isOverBudget ? 'bg-red-500' : ($isNearBudget ? 'bg-yellow-500' : 'bg-green-800') }}"
-                                 style="width: {{ min($percentUsed, 100) }}%"></div>
-
-                            <!-- Percentage Label Inside Bar (if there's enough space) -->
-                            @if($percentUsed >= 15)
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <span class="text-xs font-bold text-white drop-shadow-lg">
-                                        {{ number_format($percentUsed, 1) }}%
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Remaining Budget Info -->
-                        <div class="flex justify-between items-center mt-2">
-                            <span class="text-xs text-gray-300">
-                                Remaining: ₱{{ number_format($remaining, 2) }}
-                            </span>
-                            <span class="text-xs {{ $isOverBudget ? 'text-red-300' : 'text-gray-300' }}">
-                                @if($isOverBudget)
-                                    Over by ₱{{ number_format($totalSpent - $project->budget, 2) }}
-                                @else
-                                    of ₱{{ number_format($project->budget, 2) }}
-                                @endif
-                            </span>
-                        </div>
-                    </div>
-
+                    <!-- Hidden action buttons for JavaScript functionality -->
                     @if(auth()->user()->is_admin)
-                        <!-- Action Buttons - Admin Only -->
-                        <div class="flex justify-center space-x-2 pt-4 border-t border-white border-opacity-20">
-                            <button class="archive-project-btn bg-amber-700 hover:bg-amber-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-amber-600 ease-in-out transform hover:-translate-y-1"
-                                    data-project-id="{{ $project->id }}"
-                                    data-project-name="{{ $project->name }}">
-                                <span>Archive</span>
-                            </button>
-                            <button class="delete-project-btn bg-red-700 hover:bg-red-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl min-w-[80px] justify-center border border-red-600 ease-in-out transform hover:-translate-y-1"
-                                    data-project-id="{{ $project->id }}"
-                                    data-project-name="{{ $project->name }}">
-                                <span>Delete</span>
-                            </button>
+                        <div class="hidden action-buttons">
+                            <button class="archive-project-btn" data-project-id="{{ $project->id }}" data-project-name="{{ $project->name }}"></button>
+                            <button class="delete-project-btn" data-project-id="{{ $project->id }}" data-project-name="{{ $project->name }}"></button>
                         </div>
                     @endif
                 </div>
@@ -565,9 +507,13 @@ body {
                         Back
                     </button>
                     <button type="button" id="addSalaryBtn" 
-                            class="px-6 py-3 rounded-lg border-2 border-green-500 text-green-700 hover:bg-green-50 font-semibold transition-all duration-200 bg-green-100">
-                        Add Salary
+                        class="px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-800 border-2 border-green-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center">
+                        <span>Add Salary</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
                     </button>
+
                 </div>
             </form>
         </div>
@@ -655,18 +601,14 @@ body {
                     </div>
                 </div>
                 
-                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
-                    <button type="button" onclick="if(window.initializeSalaryModalUX) window.initializeSalaryModalUX();" 
-                            class="px-3 py-1 rounded-lg border border-orange-500 text-orange-700 hover:bg-orange-50 font-medium transition-all duration-200 bg-orange-100 text-xs">
-                        🔧 Debug: Re-init UX
-                    </button>
+                <div class="flex justify-end items-center pt-3 border-t border-gray-200">
                     <div class="flex space-x-3">
                         <button type="button" id="cancelSalaryBtn" 
                                 class="px-4 py-2 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100 text-sm">
                             Cancel
                         </button>
                         <button type="submit" 
-                                class="bg-blue-600 hover:bg-blue-800 px-4 py-2 rounded-lg font-bold text-white border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
+                                class="bg-green-600 hover:bg-green-800 px-4 py-2 rounded-lg font-bold text-white border-2 border-green-700 shadow-lg hover:shadow-xl transition-all duration-200 text-sm">
                             <span id="submitSalaryText">Save Salary & Team</span>
                         </button>
                     </div>
@@ -685,43 +627,57 @@ body {
             <div id="editSalariesProjectInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <div class="text-sm text-blue-600 font-medium">Project:</div>
+                <div class="text-sm text-blue-600 font-medium">Project:</div>
                         <div id="editSalariesProjectName" class="font-bold text-blue-800 text-lg"></div>
-                    </div>
+            </div>
                     <div class="text-right">
                         <div class="text-sm text-blue-600 font-medium">Period:</div>
                         <div id="editSalariesPeriod" class="font-medium text-blue-700"></div>
                     </div>
                 </div>
-            </div>
-            
+                    </div>
+                    
             <!-- Team Display Section -->
             <div id="teamDisplayContainer" class="space-y-4">
-                <!-- Will be populated by JavaScript -->
+                        <!-- Will be populated by JavaScript -->
                 <div class="text-center py-8 text-gray-400">
                     <div class="text-4xl mb-2">👷</div>
                     <p>Loading team information...</p>
+                    </div>
                 </div>
-            </div>
-            
+                
             <div class="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
                 <div class="text-sm text-gray-500">
                     Last updated: <span id="lastUpdatedTime">Just now</span>
                 </div>
-                <div class="flex space-x-3">
-                    <button type="button" id="refreshTeamBtn" 
-                            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium transition-all duration-200 flex items-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                        <span>Refresh</span>
-                    </button>
+                    <div class="flex space-x-3">
+                                         <button type="button" id="refreshTeamBtn" 
+                             class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Refresh</span>
+                     </button>
+                     <button type="button" id="testRefreshBtn" 
+                             class="px-4 py-2 rounded-lg border border-orange-300 text-orange-700 hover:bg-orange-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Test Refresh</span>
+                     </button>
+                     <button id="debugCostBtn" 
+                             class="px-4 py-2 rounded-lg border border-red-300 text-red-700 hover:bg-red-100 font-medium transition-all duration-200 flex items-center space-x-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                         </svg>
+                         <span>Debug Cost</span>
+                     </button>
                     <button type="button" id="closeEditSalariesBtn" 
                             class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200">
                         Close
-                    </button>
+                        </button>
+                    </div>
                 </div>
-            </div>
         </div>
     </div>
 
@@ -784,12 +740,12 @@ body {
                     <input type="date" id="projectDate" name="project_date" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" required>
                 </div>
                 <div>
-                    <label for="projectFppCode" class="block text-gray-700 font-semibold mb-1">F/P/P Code <span class="text-gray-500 text-sm">(Optional)</span></label>
-                    <input id="projectFppCode" name="fpp_code" type="text" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Enter F/P/P code">
+                    <label for="projectFppCode" class="block text-gray-700 font-semibold mb-1">F/P/P Code <span class="text-gray-500 text-sm"></span></label>
+                    <input id="projectFppCode" name="fpp_code" type="text" class="w-full rounded-lg px-4 py-2 border border-gray-300 focus:outline-none focus:border-blue-500" placeholder="Enter F/P/P code" required>
                 </div>
                 <div class="flex justify-end space-x-3 pt-2">
                     <button type="button" id="cancelProjectBtn" class="px-6 py-3 rounded-lg border-2 border-gray-500 text-gray-800 hover:bg-gray-200 font-semibold transition-all duration-200 bg-gray-100">Cancel</button>
-                    <button type="button" id="saveAndAddExpenseBtn" class="px-6 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-800 border-2 border-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center">
+                    <button type="button" id="saveAndAddExpenseBtn" class="px-6 py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-800 border-2 border-green-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center">
                         <span>Proceed to Add Expense</span>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -822,10 +778,7 @@ body {
                         <button id="showReceiptsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200">
                             View Receipts
                         </button>
-                        <button id="editDetailedEngineeringBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center">
-                            <i class="fas fa-users-cog mr-2"></i>
-                            Edit Engineering Team
-                        </button>
+                        
                     </div>
                 </div>
             </div>
@@ -951,6 +904,13 @@ body {
     
     .project-card {
         margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
 }
 @media (min-width: 641px) and (max-width: 1024px) {
@@ -1323,7 +1283,7 @@ body {
                     
                     if (response.ok) {
                         // Show success message
-                        showCenteredNotification('Expenses saved successfully!', 'success', 2000);
+                        showCenteredNotification('Expenses saved successfully!', 'success', 1000);
                         
                         // Get project info from the expense modal
                         const projectId = document.getElementById('expenseProjectId').value;
@@ -1367,6 +1327,10 @@ body {
         if (cancelSalaryBtn) {
             cancelSalaryBtn.addEventListener('click', function() {
                 ModalManager.closeModal('addSalaryModal');
+                // Add a small delay to ensure the modal is fully closed before refreshing
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
             });
         }
 
@@ -1377,23 +1341,57 @@ body {
                 
                 console.log('Salary form submission started');
                 
-                // Validate form before submission
-                if (!addSalaryForm.checkValidity()) {
-                    console.log('Form validation failed');
-                    addSalaryForm.reportValidity();
-                    return;
-                }
-                
+                // Get the form submit button and save its original state
                 const submitBtn = addSalaryForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
+                
                 try {
-                    // Show loading state
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Saving...';
-                    
+                    // Get all form data
                     const formData = new FormData(addSalaryForm);
                     
+                    // Debug: Log the initial form data
+                    console.log('Initial FormData entries:');
+                    for (let pair of formData.entries()) {
+                        console.log(pair[0] + ': ' + pair[1]);
+                    }
+                    
+                    // Get all checked team members (salary is optional)
+                    const checkedMembers = [];
+                    const checkboxes = document.querySelectorAll('.team-member-checkbox:checked');
+                    
+                    checkboxes.forEach(checkbox => {
+                        const engineerId = checkbox.value;
+                        const salaryInput = document.querySelector(`.individual-salary-input[data-engineer-id="${engineerId}"]`);
+                        const salary = salaryInput ? parseFloat(salaryInput.value) || 0 : 0;
+                        
+                        // Include all checked members, even with 0 salary
+                        checkedMembers.push(engineerId);
+                        formData.append('individual_salaries[' + engineerId + ']', salary);
+                        console.log(`Adding engineer ${engineerId} with salary ${salary}`);
+                    });
+                    
+                    // Clear any existing team members from form data
+                    formData.delete('team_members[]');
+                    
+                    // Add team members to form data (empty array is allowed)
+                    checkedMembers.forEach(id => formData.append('team_members[]', id));
+                    
+                    // Debug: Log the final form data before submission
+                    console.log('Final FormData entries before submission:');
+                    for (let pair of formData.entries()) {
+                        console.log(pair[0] + ': ' + pair[1]);
+                    }
+                    
+                    console.log('Checked members:', checkedMembers);
+                    console.log('Submitting form with project_engineer_id:', formData.get('project_engineer_id'));
+                    
+                    // The form can be submitted with just the project engineer and no team members
+                    
+                    // Submit the form data
                     const response = await fetch('/monthly-assignments/create-salary', {
                         method: 'POST',
                         headers: {
@@ -1406,7 +1404,11 @@ body {
                     const data = await response.json();
                     
                     if (response.ok) {
-                        showCenteredNotification(data.message, 'success', 1000);
+                        const message = checkedMembers.length > 0 
+                            ? 'Team and salary assignment saved successfully!' 
+                            : 'Project engineer updated successfully!';
+                        
+                        showCenteredNotification(message, 'success', 1000);
                         
                         // Close modal and reload page
                         ModalManager.closeModal('addSalaryModal');
@@ -1418,7 +1420,11 @@ body {
                     }
                 } catch (error) {
                     console.error('Error saving salary assignment:', error);
-                    showCenteredNotification(error.message || 'An error occurred while saving salary assignment', 'error', 1000);
+                    showCenteredNotification(
+                        error.message || 'An error occurred while saving the assignment', 
+                        'error', 
+                        1000
+                    );
                 } finally {
                     // Reset button state
                     submitBtn.disabled = false;
@@ -1562,32 +1568,31 @@ body {
                 let isValid = true;
                 let errorMessage = '';
 
-                // Check if project engineer is selected
+                // Check if project engineer is selected (only required field)
                 if (!projectEngineer) {
                     isValid = false;
                     errorMessage = 'Please select a Project Engineer';
                 }
-                // Check if at least one team member is selected
-                else if (selectedMembers.length === 0) {
-                    isValid = false;
-                    errorMessage = 'Please select at least one team member';
-                }
-                // Check if team head is selected
-                else if (!selectedTeamHead) {
-                    isValid = false;
-                    errorMessage = 'Please select a team head';
-                }
-                // Check if all selected members have salaries
-                else {
-                    const hasEmptySalaries = selectedMembers.some(checkbox => {
-                        const engineerId = checkbox.value;
-                        const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
-                        return !salaryInput.value || parseFloat(salaryInput.value) <= 0;
-                    });
-
-                    if (hasEmptySalaries) {
+                // Only validate team members and salaries if at least one member is selected
+                else if (selectedMembers.length > 0) {
+                    // Check if team head is selected when there are team members
+                    if (!selectedTeamHead) {
                         isValid = false;
-                        errorMessage = 'Please enter salary amounts for all team members';
+                        errorMessage = 'Please select a team head';
+                    }
+                    // Check if all selected members have valid salaries
+                    else {
+                        const hasEmptySalaries = selectedMembers.some(checkbox => {
+                            const engineerId = checkbox.value;
+                            const salaryInput = document.querySelector(`input[name="individual_salaries[${engineerId}]"]`);
+                            // Only validate salary if the member is checked
+                            return checkbox.checked && (!salaryInput.value || parseFloat(salaryInput.value) <= 0);
+                        });
+
+                        if (hasEmptySalaries) {
+                            isValid = false;
+                            errorMessage = 'Please enter salary amounts for all selected team members';
+                        }
                     }
                 }
 
@@ -1755,13 +1760,53 @@ body {
                     // Render team members
                     renderTeamMembers(data.monthly_assignments || []);
                     
-                    // Set up refresh button
-                    const refreshBtn = document.getElementById('refreshTeamBtn');
-                    if (refreshBtn) {
-                        refreshBtn.onclick = function() {
-                            openEditSalariesModal(projectId);
-                        };
-                    }
+                                         // Set up refresh button
+                     const refreshBtn = document.getElementById('refreshTeamBtn');
+                     if (refreshBtn) {
+                         refreshBtn.onclick = function() {
+                             openEditSalariesModal(projectId);
+                         };
+                     }
+                     
+                     // Set up test refresh button
+                     const testRefreshBtn = document.getElementById('testRefreshBtn');
+                     if (testRefreshBtn) {
+                         testRefreshBtn.onclick = function() {
+                             console.log('Test refresh button clicked');
+                             const currentSelectedProjects = window.currentSelectedProjects || [];
+                             if (currentSelectedProjects.length > 0) {
+                                 console.log('Test refreshing with projects:', currentSelectedProjects);
+                                 openMultipleTrackRecordModal(currentSelectedProjects);
+                             } else {
+                                 console.log('No projects to refresh');
+                             }
+                         };
+                     }
+                     
+                     // Set up debug cost button
+                     const debugCostBtn = document.getElementById('debugCostBtn');
+                     if (debugCostBtn) {
+                         debugCostBtn.onclick = function() {
+                             console.log('Debug cost button clicked');
+                             const currentSelectedProjects = window.currentSelectedProjects || [];
+                             if (currentSelectedProjects.length > 0) {
+                                 const projectId = currentSelectedProjects[0].id;
+                                 console.log('Debugging cost for project:', projectId);
+                                 fetch(`/projects/${projectId}/debug-engineering-cost`)
+                                     .then(response => response.json())
+                                     .then(data => {
+                                         console.log('Debug cost data:', data);
+                                         alert(`Debug Cost Data:\n\nProject: ${data.project_name}\nDetailed Engineering Cost: ₱${data.detailed_engineering_cost}\nTotal Spent: ₱${data.total_spent}\nTotal with Engineering: ₱${data.total_spent_with_engineering}\nRemaining Budget: ₱${data.remaining_budget}\n\nMonthly Assignments: ${data.monthly_assignments.length} engineers`);
+                                     })
+                                     .catch(error => {
+                                         console.error('Error fetching debug data:', error);
+                                         alert('Error fetching debug data');
+                                     });
+                             } else {
+                                 console.log('No projects to debug');
+                             }
+                         };
+                     }
                     
                     // Set up close button
                     const closeBtn = document.getElementById('closeEditSalariesBtn');
@@ -1865,19 +1910,27 @@ body {
                             <span class="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
                             Team Members (${teamMembers.length})
                         </h3>
-                        <div class="space-y-3">
+                        <div class="space-y-3" id="teamMembersList">
                 `;
                 
                 teamMembers.forEach(member => {
                     html += `
-                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 team-member-row" data-engineer-id="${member.engineer_id}">
                             <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="font-medium text-purple-800">${member.engineer_name || 'N/A'}</div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="font-medium text-purple-800">${member.engineer_name || 'N/A'}</div>
+                                        <button class="text-red-500 hover:text-red-700 delete-engineer-btn" 
+                                                data-engineer-id="${member.engineer_id}" 
+                                                data-engineer-name="${member.engineer_name}"
+                                                title="Remove engineer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                     <div class="text-sm text-purple-600 mt-1">${member.engineer_specialization || 'No specialization'}</div>
                                     <div class="text-xs text-purple-500 mt-1">Assigned: ${formatDate(member.assigned_at)}</div>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-right ml-4">
                                     <div class="text-sm font-medium text-purple-700">Salary</div>
                                     <div class="text-lg font-bold text-purple-800">${formatCurrency(member.salary)}</div>
                                 </div>
@@ -2272,11 +2325,17 @@ body {
                         if (response.ok) {
                             showCenteredNotification(data.message, 'success', 1000);
                             
-                            // Close modal and reload page
+                            // Close the salary edit modal
                             ModalManager.closeModal('editSalariesModal');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                            
+                            // Get the project ID from the form
+                            const projectId = formData.get('project_id');
+                            
+                            // Refresh the track record data
+                            await refreshTrackRecord(projectId);
+                            
+                            // Small delay to ensure the UI updates smoothly
+                            await new Promise(resolve => setTimeout(resolve, 500));
                         } else {
                             throw new Error(data.message || 'Failed to update salary assignment');
                         }
@@ -2463,7 +2522,7 @@ body {
         }
 
         // Delete project function
-        async function deleteProject(id, name) {
+        async function deleteProject(id, name, skipNotification = false) {
             console.log('deleteProject function called:', { id, name, isUserAdmin });
 
             if (!isUserAdmin) {
@@ -2494,13 +2553,14 @@ body {
                     const data = await response.json();
                     console.log('Success:', data.message);
 
-                    // Show centered deletion message (red color for deletion)
-                    showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 1000);
-
-                    // Reload page
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    // Only show notification if not called from delete selected
+                    if (!skipNotification) {
+                        showCenteredNotification(`${data.message}. You can restore it from Recently Deleted.`, 'error', 1000);
+                        // Reload page after notification
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
                 } else {
                     const errorData = await response.json().catch(() => ({}));
                     const errorMessage = errorData.message || 'Error deleting project. Please try again.';
@@ -2637,10 +2697,29 @@ body {
             const selectedCheckboxes = document.querySelectorAll('.project-checkbox:checked');
             if (selectedCheckboxes.length === 0) return;
 
-            currentSelectedProjects = Array.from(selectedCheckboxes).map(cb => ({
-                id: cb.dataset.projectId,
-                name: cb.dataset.projectName
-            }));
+            currentSelectedProjects = Array.from(selectedCheckboxes).map(cb => {
+                // Find the project card that contains this checkbox
+                const projectCard = cb.closest('.project-card');
+                let engineerInfo = null;
+                
+                // Try to get engineer info from the project card if available
+                if (projectCard) {
+                    const engineerElement = projectCard.querySelector('.engineer-name');
+                    if (engineerElement) {
+                        engineerInfo = {
+                            name: engineerElement.textContent.trim(),
+                            specialization: engineerElement.nextElementSibling?.classList.contains('text-gray-300') ? 
+                                engineerElement.nextElementSibling.textContent.replace(/[()]/g, '').trim() : null
+                        };
+                    }
+                }
+                
+                return {
+                    id: cb.dataset.projectId,
+                    name: cb.dataset.projectName,
+                    engineer: engineerInfo
+                };
+            });
 
             await openMultipleTrackRecordModal(currentSelectedProjects);
         });
@@ -2671,16 +2750,16 @@ body {
 
                     // Delete each project
                     for (const project of selectedProjects) {
-                        await deleteProject(project.id, project.name);
+                        await deleteProject(project.id, project.name, true); // Skip individual notifications
                     }
 
-                    // Show success message
+                    // Show success message with longer display time
                     showCenteredNotification(`Successfully deleted ${selectedProjects.length} project${selectedProjects.length > 1 ? 's' : ''}`, 'success', 1000);
 
-                    // Reload the page to refresh the project list
+                    // Reload the page to refresh the project list after the notification has been shown
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1000);
+                    }, 2500);
 
                 } catch (error) {
                     console.error('Error deleting projects:', error);
@@ -2696,7 +2775,19 @@ body {
 
         // Close track record modal
         closeTrackRecordBtn.addEventListener('click', function() {
-            ModalManager.closeModal('trackRecordModal');
+            // Check if we're in edit mode and prompt to save
+            const editForm = document.querySelector('.project-edit-form');
+            if (editForm && confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                // If confirmed, reset the form and close the modal
+                const projectCard = editForm.closest('.project-card');
+                if (projectCard) {
+                    projectCard.querySelector('.project-details').classList.remove('hidden');
+                    projectCard.querySelector('.project-edit-form').remove();
+                }
+                ModalManager.closeModal('trackRecordModal');
+            } else if (!editForm) {
+                ModalManager.closeModal('trackRecordModal');
+            }
         });
 
         // ESC handler removed - using centralized modal manager
@@ -2762,6 +2853,10 @@ body {
 
         // Open multiple projects track record modal
         async function openMultipleTrackRecordModal(selectedProjects) {
+            console.log('openMultipleTrackRecordModal called with:', selectedProjects);
+            
+            // Store selected projects globally for refresh purposes
+            window.currentSelectedProjects = selectedProjects;
             try {
                 // Update modal title
                 const projectNames = selectedProjects.length === 1
@@ -2786,9 +2881,28 @@ body {
                 // Fetch data for all selected projects
                 const projectsData = await Promise.all(
                     selectedProjects.map(async (project) => {
-                        const response = await fetch(`/projects/${project.id}/track-record`);
+                        console.log(`Fetching track record for project: ${project.name} (ID: ${project.id})`);
+                        const response = await fetch(`/projects/${project.id}/track-record?t=${Date.now()}&refresh=true`);
                         const data = await response.json();
-                        return { ...data, projectName: project.name };
+                        console.log(`Track record data for ${project.name}:`, data);
+                        
+                        // Preserve the original project data including engineer info
+                        const projectData = {
+                            ...data,
+                            project: {
+                                ...data.project,
+                                // Use project_engineer if available, otherwise fall back to existing engineer data
+                                engineer: data.project && data.project.project_engineer 
+                                    ? data.project.project_engineer 
+                                    : (project.engineer || (data.project && data.project.engineer) || null),
+                                fpp_code: data.project ? (data.project.fpp_code || '') : ''
+                            },
+                            projectName: project.name
+                        };
+                        
+                        console.log('Project data for', project.name, ':', projectData);
+                        
+                        return projectData;
                     })
                 );
 
@@ -2801,17 +2915,44 @@ body {
                 let projectsHtml = '';
 
                 projectsData.forEach((data, index) => {
-                    const project = data.project;
-                    const expenses = data.expenses;
-                    const summary = data.summary;
+                    const project = data.project || {};
+                    const expenses = data.expenses || [];
+                    const summary = data.summary || {};
+                    const engineer = project.engineer || null;
+                    const projectId = project.id || data.id; // Get project ID from either project object or data
 
                     projectsHtml += `
-                        <div class="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-6 mb-6 border-2 border-blue-300 shadow-lg">
-                            <div class="mb-4">
-                                <h3 class="text-xl font-bold text-gray-900">${data.projectName}</h3>
-                                ${project.fpp_code ? `<p class="text-sm text-gray-700 font-medium">F/P/P Code: ${project.fpp_code}</p>` : ''}
+                        <div class="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-6 mb-6 border-2 border-blue-300 shadow-lg relative project-card" data-project-id="${projectId}">
+                            <!-- Project name with edit button in corner -->
+                            <div class="relative mb-4">
+                                <h3 class="text-xl font-bold text-gray-900 pr-8 break-words">${data.projectName || 'Unnamed Project'}</h3>
+                                <!-- Edit button -->
+                                <button class="absolute top-0 right-0 p-1 text-gray-500 hover:text-blue-600 transition-colors" 
+                                        onclick="editProjectDetails(this, '${projectId}')"
+                                        title="Edit Project">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                </button>
                             </div>
-                                   
+                            
+                            <div class="project-details">
+                                <div class="fpp-code mb-2">
+                                    ${project.fpp_code ? `<p class="text-sm text-gray-700 font-medium">F/P/P Code: <span class="fpp-code-value">${project.fpp_code}</span></p>` : ''}
+                                </div>
+                                <div class="project-budget mb-2">
+                                    <p class="text-sm text-gray-700 font-medium">Budget: <span class="budget-value">₱${summary.total_budget ? summary.total_budget.toLocaleString() : '0'}</span></p>
+                                </div>
+                                <div class="project-engineer">
+                                    ${engineer ? `
+                                        <p class="text-sm text-gray-700 font-medium mt-1 mb-2">
+                                            <span class="font-semibold">Engineer:</span> 
+                                            <span class="engineer-name">${engineer.name || 'N/A'}</span>
+                                            ${engineer.specialization ? `<span class="text-gray-500 ml-1 engineer-specialization">(${engineer.specialization})</span>` : ''}
+                                        </p>
+                                    ` : '<p class="text-sm text-gray-500 font-medium mb-2">No engineer assigned</p>'}
+                                </div>
+                            </div>
                     
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                                 <div class="text-center bg-green-50 border border-green-200 rounded-lg p-4 shadow-sm">
@@ -2850,6 +2991,7 @@ body {
                                                 ${expenses.map(expense => {
                                                     const escapedDescription = expense.description.replace(/'/g, "\\'").replace(/"/g, '\\"');
                                                     const isVirtual = expense.is_virtual || false;
+                                                    const isDetailedEngineering = expense.description === 'Detailed Engineering';
                                                     const rowClass = isVirtual ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-blue-50';
                                                     const descriptionClass = isVirtual ? 'text-yellow-800 font-semibold' : 'text-gray-900';
 
@@ -2858,38 +3000,36 @@ body {
                                                         <td class="px-4 py-3 text-sm font-medium text-gray-900">${new Date(expense.date).toLocaleDateString()}</td>
                                                         <td class="px-4 py-3 text-sm ${descriptionClass}">
                                                             ${expense.description}
-                                                            ${isVirtual ? '<span class="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">Auto-calculated</span>' : ''}
+                                                            ${isVirtual ? '<span class="ml-2 text-xs text-yellow-800 px-2 py-1 rounded-full"></span>' : ''}
                                                         </td>
-                                                        <td class="px-4 py-3 text-sm font-bold text-red-700">₱${parseFloat(expense.amount).toLocaleString()}</td>
+                                                        <td class="px-4 py-3 text-sm font-bold text-red-700">₱${parseFloat(expense.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                                         <td class="px-4 py-3 text-sm">
-                                                            ${isVirtual ?
-                                                                (isUserAdmin ? `
+                                                            ${isUserAdmin ? `
+                                                                ${isDetailedEngineering ? `
                                                                     <button 
-                                                                        onclick="window.location.href = '?edit_engineering=true'; openMultipleTrackRecordModal([{id: ${project.id}, name: '${project.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}'}]);"
+                                                                        onclick="openEditDetailedEngineeringModal(${project.id}, '${project.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}')"
                                                                         class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
                                                                     >
                                                                         Edit
                                                                     </button>
-                                                                ` : '<span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-md text-xs font-medium">System Generated</span>')
-                                                                :
-                                                                (isUserAdmin ? `
+                                                                ` : `
                                                                     <button class="edit-expense-btn bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
-                                                                    data-expense-id="${expense.id}"
-                                                                    data-description="${escapedDescription}"
-                                                                    data-amount="${expense.amount}"
-                                                                    data-date="${expense.date}"
-                                                                    data-project-id="${project.id}">
-                                                                    Edit
+                                                                        data-expense-id="${isVirtual ? '' : expense.id}"
+                                                                        data-description="${escapedDescription}"
+                                                                        data-amount="${isVirtual ? '0' : expense.amount}"
+                                                                        data-date="${expense.date || new Date().toISOString().split('T')[0]}"
+                                                                        data-project-id="${project.id}"
+                                                                        data-is-virtual="${isVirtual ? 'true' : 'false'}">
+                                                                        ${isVirtual ? 'Add' : 'Edit'}
                                                                     </button>
-
-                                                                    
-                                                                <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
-                                                                    data-expense-id="${expense.id}"
-                                                                    data-description="${escapedDescription}">
-                                                                    Delete
-                                                                </button>
-                                                                ` : '<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-xs font-medium">View Only</span>')
-                                                            }   
+                                                                    ${!isVirtual ? `
+                                                                    <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
+                                                                        data-expense-id="${expense.id}"
+                                                                        data-description="${escapedDescription}">
+                                                                        Delete
+                                                                    </button>` : ''}
+                                                                `}
+                                                            ` : '<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-xs font-medium">View Only</span>'}
                                                         </td>
                                                     </tr>
                                                     `;
@@ -2910,45 +3050,415 @@ body {
                 });
 
                 document.getElementById('projectsContainer').innerHTML = projectsHtml;
+                
+                // Add click handlers for edit buttons
+                document.querySelectorAll('.edit-project-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const projectId = this.dataset.projectId;
+                        editProjectDetails(this, projectId);
+                    });
+                });
+                
+                // Load engineers for the project engineer dropdown
+                loadEngineersForProjectEdit();
+
+// Make the function globally available
+window.editProjectDetails = async function(button, projectId) {
+    console.log('editProjectDetails called with projectId:', projectId, 'button:', button);
+    console.log('Window object:', window);
+    console.log('editProjectDetails function exists:', typeof window.editProjectDetails);
+    const projectCard = button.closest('.project-card');
+    if (!projectCard) {
+        console.error('Could not find project card');
+        return;
+    }
+    
+    // Get project data with better error handling
+    const projectNameElement = projectCard.querySelector('.project-name h3, .project-name');
+    const fppCodeElement = projectCard.querySelector('.fpp-code-value, [data-field="fpp_code"]');
+    const budgetElement = projectCard.querySelector('.budget-value, [data-field="budget"]');
+    const engineerNameElement = projectCard.querySelector('.engineer-name, [data-field="engineer_name"]');
+    const engineerSpecializationElement = projectCard.querySelector('.engineer-specialization, [data-field="engineer_specialization"]');
+    
+    const projectName = projectNameElement ? projectNameElement.textContent.trim() : '';
+    const fppCode = fppCodeElement ? fppCodeElement.textContent.trim() : '';
+    const budget = budgetElement ? budgetElement.textContent.replace(/[^0-9.]/g, '') : '0';
+    const engineerName = engineerNameElement ? engineerNameElement.textContent.trim() : '';
+    const engineerSpecialization = engineerSpecializationElement ? 
+        engineerSpecializationElement.textContent.replace(/[()]/g, '').trim() : '';
+        
+    console.log('Project data:', { projectName, fppCode, budget, engineerName, engineerSpecialization });
+    
+    // Create edit form HTML
+    const editForm = document.createElement('div');
+    editForm.className = 'project-edit-form bg-white p-6 rounded-lg border border-blue-200';
+    editForm.innerHTML = `
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Edit Project Details</h3>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                <input type="text" class="project-name-input w-full px-3 py-2 border border-gray-300 rounded-md" 
+                       value="${projectName.replace(/"/g, '&quot;')}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">F/P/P Code</label>
+                <input type="text" class="fpp-code-input w-full px-3 py-2 border border-gray-300 rounded-md" 
+                       value="${fppCode.replace(/"/g, '&quot;')}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Budget (₱)</label>
+                <input type="number" step="0.01" min="0" 
+                       class="budget-input w-full px-3 py-2 border border-gray-300 rounded-md" 
+                       value="${parseFloat(budget).toFixed(2)}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Project Engineer</label>
+                <select class="engineer-select w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">Select Engineer</option>
+                    <!-- Will be populated by loadEngineersForProjectEdit() -->
+                </select>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" class="cancel-edit-btn px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button type="button" class="save-edit-btn px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Hide the details and show the form
+    projectCard.querySelector('.project-details').classList.add('hidden');
+    projectCard.insertBefore(editForm, projectCard.querySelector('.project-details'));
+    
+    // Load engineers for the dropdown
+    await loadEngineersForProjectEdit(projectId);
+    
+    // Set the selected engineer if exists
+    if (engineerName) {
+        const engineerSelect = editForm.querySelector('.engineer-select');
+        if (engineerSelect) {
+            const options = Array.from(engineerSelect.options);
+            const engineerOption = options.find(option => 
+                option.text.includes(engineerName) || 
+                (engineerSpecialization && option.text.includes(engineerSpecialization))
+            );
+            if (engineerOption) engineerOption.selected = true;
+        }
+    }
+    
+    // Add event listeners
+    editForm.querySelector('.cancel-edit-btn').addEventListener('click', () => {
+        projectCard.querySelector('.project-details').classList.remove('hidden');
+        editForm.remove();
+    });
+    
+    const saveButton = editForm.querySelector('.save-edit-btn');
+    saveButton.addEventListener('click', async () => {
+        // Disable button and show loading state
+        const originalButtonText = saveButton.innerHTML;
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+        
+        try {
+            await saveProjectDetails(projectId, projectCard, editForm);
+            
+            // If save is successful, close the edit form and show success message
+            projectCard.querySelector('.project-details').classList.remove('hidden');
+            editForm.remove();
+            showCenteredNotification('Project updated successfully!', 'success', 1000);
+            
+            // Refresh track records if the modal is open
+            const trackRecordModal = document.getElementById('trackRecordModal');
+            if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                const projectId = projectCard.getAttribute('data-project-id');
+                if (window.currentSelectedProjects && window.currentSelectedProjects.length > 0) {
+                    openMultipleTrackRecordModal(window.currentSelectedProjects);
+                } else if (window.openTrackRecordModal) {
+                    window.openTrackRecordModal(projectId);
+                } else if (window.refreshTrackRecord) {
+                    window.refreshTrackRecord(projectId);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error saving project details:', error);
+            // Re-enable button and show error
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalButtonText;
+            showCenteredNotification(error.message || 'Failed to save changes. Please try again.', 'error', 3000);
+        }
+    });
+}
+
+// Load engineers for the project edit form
+async function loadEngineersForProjectEdit(projectId = null) {
+    try {
+        const response = await fetch('/api/engineers');
+        if (!response.ok) throw new Error('Failed to load engineers');
+        
+        const engineers = await response.json();
+        const engineerSelects = document.querySelectorAll('.engineer-select');
+        
+        engineerSelects.forEach(select => {
+            // Save current selection
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Select Engineer</option>';
+            
+            engineers.forEach(engineer => {
+                const option = document.createElement('option');
+                option.value = engineer.id;
+                option.textContent = `${engineer.name}${engineer.specialization ? ` (${engineer.specialization})` : ''}`;
+                select.appendChild(option);
+            });
+            
+            // Restore selection if it exists
+            if (currentValue) {
+                select.value = currentValue;
+            } else if (projectId) {
+                // Try to select the current project's engineer if available
+                const currentEngineer = document.querySelector(`[data-project-id="${projectId}"] .engineer-name`);
+                if (currentEngineer) {
+                    const engineerName = currentEngineer.textContent.trim();
+                    const options = Array.from(select.options);
+                    const matchingOption = options.find(opt => opt.text.includes(engineerName));
+                    if (matchingOption) matchingOption.selected = true;
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading engineers:', error);
+        showCenteredNotification('Failed to load engineers', 'error', 1000);
+    }
+}
+
+// Save project details
+async function saveProjectDetails(projectId, projectCard, editForm) {
+    const projectName = editForm.querySelector('.project-name-input').value.trim();
+    const fppCode = editForm.querySelector('.fpp-code-input').value.trim();
+    const budget = parseFloat(editForm.querySelector('.budget-input').value) || 0;
+    const engineerId = editForm.querySelector('.engineer-select').value;
+    
+    // Check if track record modal is open and for this project
+    const trackRecordModal = document.getElementById('trackRecordModal');
+    const isTrackRecordOpen = trackRecordModal && !trackRecordModal.classList.contains('hidden');
+    const trackRecordProjectId = isTrackRecordOpen ? trackRecordModal.getAttribute('data-project-id') : null;
+    
+    if (!projectName) {
+        showCenteredNotification('Project name is required', 'error', 1000);
+        return;
+    }
+    
+    // Show loading state
+    const saveButton = editForm.querySelector('.save-edit-btn');
+    const originalButtonText = saveButton.innerHTML;
+    saveButton.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Saving...
+    `;
+    saveButton.disabled = true;
+    
+    try {
+        const response = await fetch(`/projects/${projectId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                name: projectName,
+                fpp_code: fppCode,
+                budget: budget,
+                project_engineer_id: engineerId || null
+            })
+        });
+        
+        if (!response.ok) {
+            let errorMessage = 'Failed to update project';
+            try {
+                const errorData = await response.json();
+                console.error('Server error response:', errorData);
+                
+                // Handle validation errors
+                if (errorData.errors) {
+                    errorMessage = Object.values(errorData.errors).flat().join('\n');
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+            } catch (e) {
+                console.error('Error parsing error response:', e);
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const result = await response.json();
+        
+        // Update the UI
+        projectCard.querySelector('.project-name h3').textContent = projectName;
+        
+        const fppCodeElement = projectCard.querySelector('.fpp-code-value');
+        if (fppCodeElement) {
+            fppCodeElement.textContent = fppCode;
+        } else if (fppCode) {
+            const fppCodeContainer = projectCard.querySelector('.fpp-code');
+            if (fppCodeContainer) {
+                fppCodeContainer.innerHTML = `<p class="text-sm text-gray-700 font-medium">F/P/P Code: <span class="fpp-code-value">${fppCode}</span></p>`;
+            }
+        }
+        
+        projectCard.querySelector('.budget-value').textContent = budget.toLocaleString();
+        
+        // Update engineer info
+        const engineerSelect = editForm.querySelector('.engineer-select');
+        const selectedOption = engineerSelect.options[engineerSelect.selectedIndex];
+        const engineerName = selectedOption ? selectedOption.text.split(' (')[0] : '';
+        const engineerSpecialization = selectedOption && selectedOption.text.includes('(') 
+            ? selectedOption.text.match(/\(([^)]+)\)/)[1] 
+            : '';
+            
+        const engineerContainer = projectCard.querySelector('.project-engineer');
+        if (engineerContainer) {
+            engineerContainer.innerHTML = `
+                <p class="text-sm text-gray-700 font-medium mt-1">
+                    <span class="font-semibold">Engineer:</span> 
+                    <span class="engineer-name">${engineerName || 'N/A'}</span>
+                    ${engineerSpecialization ? `<span class="text-gray-500 ml-1 engineer-specialization">(${engineerSpecialization})</span>` : ''}
+                </p>
+            `;
+        }
+        
+        // Update the budget display in the summary cards
+        const budgetCard = projectCard.querySelector('.bg-green-50 .text-lg');
+        if (budgetCard) {
+            budgetCard.textContent = `₱${budget.toLocaleString()}`;
+        }
+        
+        // Show success message and close the form
+        showCenteredNotification('Project updated successfully', 'success', 1000);
+        projectCard.querySelector('.project-details').classList.remove('hidden');
+        editForm.remove();
+        
+        // Update the current selected projects data if it exists
+        if (window.currentSelectedProjects) {
+            const projectIndex = window.currentSelectedProjects.findIndex(p => p.id == projectId);
+            if (projectIndex !== -1) {
+                window.currentSelectedProjects[projectIndex].name = projectName;
+                if (!window.currentSelectedProjects[projectIndex].engineer && engineerName) {
+                    window.currentSelectedProjects[projectIndex].engineer = {
+                        name: engineerName,
+                        specialization: engineerSpecialization
+                    };
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error updating project:', error);
+        showCenteredNotification(error.message || 'Failed to update project', 'error', 1000);
+    }
+}
 
 // Re-bind Edit and Delete expense buttons after dynamic HTML injection
 setTimeout(() => {
-    document.querySelectorAll('.edit-expense-btn').forEach(btn => {
-        btn.onclick = null; // Remove previous handler if any
-        btn.addEventListener('click', function() {
-            console.log('Edit button clicked', this.dataset);
-            const expenseId = this.dataset.expenseId;
-            const description = this.dataset.description;
-            const amount = this.dataset.amount;
-            const date = this.dataset.date;
-            const projectId = this.dataset.projectId;
-            window.editExpense(expenseId, description, amount, date, projectId);
-        });
-    });
-    document.querySelectorAll('.delete-expense-btn').forEach(btn => {
-        btn.onclick = null;
-        btn.addEventListener('click', function() {
-            const expenseId = this.dataset.expenseId;
-            const description = this.dataset.description;
+    // Use event delegation for dynamically added edit/delete buttons
+    document.addEventListener('click', function(e) {
+        // Handle edit button clicks
+        const editBtn = e.target.closest('.edit-expense-btn');
+        if (editBtn) {
+            e.preventDefault();
+            console.log('Edit button clicked', editBtn.dataset);
+            const expenseId = editBtn.dataset.expenseId;
+            const description = editBtn.dataset.description;
+            const amount = editBtn.dataset.amount;
+            const date = editBtn.dataset.date;
+            const projectId = editBtn.dataset.projectId;
+            const isVirtual = editBtn.dataset.isVirtual === 'true';
+            
+            console.log('Calling editExpense with:', { expenseId, description, amount, date, projectId, isVirtual });
+            window.editExpense(expenseId, description, amount, date, projectId, isVirtual);
+            return;
+        }
+        
+        // Handle delete button clicks
+        const deleteBtn = e.target.closest('.delete-expense-btn');
+        if (deleteBtn) {
+            e.preventDefault();
+            const expenseId = deleteBtn.dataset.expenseId;
+            const description = deleteBtn.dataset.description;
             deleteExpense(expenseId, description);
-        });
+            return;
+        }
     });
+    
     console.log('Expense Edit/Delete event listeners rebound');
 }, 0);
 
 // Ensure editExpense is globally available
-window.editExpense = function(expenseId, description, amount, date, projectId) {
-    console.log('Setting up edit form with date:', date);
-    document.getElementById('editExpenseId').value = expenseId;
-    document.getElementById('editExpenseDescription').value = description;
-    document.getElementById('editExpenseAmount').value = amount;
-    // Set the hidden date field value
-    const dateInput = document.getElementById('editExpenseDate');
-    dateInput.value = date;
-    // Store the original date in a data attribute in case we need it
-    dateInput.dataset.originalDate = date;
-    document.getElementById('editExpenseForm').dataset.projectId = projectId;
+window.editExpense = function(expenseId, description, amount, date, projectId, isVirtual) {
+    console.log('Setting up edit form with:', { expenseId, description, amount, date, projectId, isVirtual });
+    
+    // Check if this is a Detailed Engineering expense
+    if (description === 'Detailed Engineering') {
+        console.log('Detailed Engineering expense detected, opening team modal');
+        console.log('Project ID:', projectId);
+        
+        // Find the project name from the current track record data
+        let projectName = 'Unknown Project';
+        const projectCard = document.querySelector('.bg-gradient-to-r.from-blue-100.to-indigo-100 h3');
+        if (projectCard) {
+            projectName = projectCard.textContent.trim();
+            console.log('Found project name:', projectName);
+        } else {
+            console.log('Could not find project card, using default name');
+        }
+        
+        // Open the detailed engineering modal instead
+        openEditDetailedEngineeringModal(projectId, projectName);
+        return;
+    }
+    
+    // For virtual expenses (not yet added), we need to create a new expense
+    if (isVirtual === 'true' || isVirtual === true) {
+        console.log('Virtual expense detected, setting up form for new expense');
+        document.getElementById('editExpenseId').value = ''; // Empty ID for new expense
+        document.getElementById('editExpenseDescription').value = description; // Pre-fill the description
+        document.getElementById('editExpenseAmount').value = ''; // Clear amount for new entry
+        document.getElementById('editExpenseDate').value = new Date().toISOString().split('T')[0]; // Today's date
+        document.getElementById('editExpenseForm').dataset.projectId = projectId;
+        
+        // Update the form title to indicate we're adding a new expense
+        const modalTitle = document.querySelector('#editExpenseModal h2');
+        if (modalTitle) {
+            modalTitle.innerHTML = `<span class="text-2xl">➕</span> Add ${description} Expense`;
+        }
+    } else {
+        // Regular expense editing for existing expenses
+        console.log('Editing existing expense');
+        document.getElementById('editExpenseId').value = expenseId;
+        document.getElementById('editExpenseDescription').value = description;
+        document.getElementById('editExpenseAmount').value = amount;
+        
+        // Set the hidden date field value
+        const dateInput = document.getElementById('editExpenseDate');
+        dateInput.value = date;
+        // Store the original date in a data attribute in case we need it
+        dateInput.dataset.originalDate = date;
+        document.getElementById('editExpenseForm').dataset.projectId = projectId;
+        
+        // Update the form title to indicate we're editing
+        const modalTitle = document.querySelector('#editExpenseModal h2');
+        if (modalTitle) {
+            modalTitle.innerHTML = `<span class="text-2xl">✏️</span> Edit ${description} Expense`;
+        }
+    }
 
+    // Open the modal
     ModalManager.openModal('editExpenseModal');
 };
 
@@ -2959,7 +3469,16 @@ const cancelEditExpenseBtn = document.getElementById('cancelEditExpenseBtn');
 const editExpenseForm = document.getElementById('editExpenseForm');
 
 function closeEditExpenseModalAndRestore() {
-    ModalManager.closeModal('editExpenseModal');
+    const editModal = document.getElementById('editExpenseModal');
+    if (editModal) {
+        editModal.classList.add('hidden');
+        // Remove from stack
+        const index = ModalManager.modalStack.indexOf('editExpenseModal');
+        if (index > -1) {
+            ModalManager.modalStack.splice(index, 1);
+            console.log('Modal closed with stack:', ModalManager.modalStack);
+        }
+    }
     editExpenseForm.reset();
 }
 if (closeEditExpenseBtn) closeEditExpenseBtn.addEventListener('click', closeEditExpenseModalAndRestore);
@@ -2979,8 +3498,29 @@ if (editExpenseForm) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="animate-spin mr-2"></span>Updating...';
         updateExpense(expenseId, description, amount, date, projectId)
-            .then(() => {
+            .then((result) => {
                 closeEditExpenseModalAndRestore();
+                
+                // Check if track record modal is open and refresh it
+                const trackRecordModal = document.getElementById('trackRecordModal');
+                if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                    // Use existing refresh mechanism if available
+                    if (window.currentSelectedProjects && window.currentSelectedProjects.length > 0) {
+                        openMultipleTrackRecordModal(window.currentSelectedProjects);
+                    } else {
+                        const projectId = trackRecordModal.getAttribute('data-project-id');
+                        if (projectId && window.openTrackRecordModal) {
+                            window.openTrackRecordModal(projectId);
+                        }
+                    }
+                }
+                
+                return result;
+            })
+            .catch(error => {
+                console.error('Error updating expense:', error);
+                showCenteredNotification('Failed to update expense. Please try again.', 'error', 1000);
+                throw error;
             })
             .finally(() => {
                 submitBtn.disabled = false;
@@ -2989,10 +3529,9 @@ if (editExpenseForm) {
     });
 }
 
-                // Setup action buttons
+                                 // Setup action buttons
                 const printAllBtn = document.getElementById('printAllBtn');
                 const showReceiptsBtn = document.getElementById('showReceiptsBtn');
-                const editDetailedEngineeringBtn = document.getElementById('editDetailedEngineeringBtn');
 
                 printAllBtn.onclick = function() {
                     printAllProjects(currentSelectedProjects);
@@ -3002,75 +3541,9 @@ if (editExpenseForm) {
                     openReceiptModal(null, true, currentSelectedProjects.map(p => p.id));
                 };
 
-                // Add click handler for Edit Detailed Engineering button
-                editDetailedEngineeringBtn.onclick = function() {
-                    if (currentSelectedProjects.length === 1) {
-                        loadDetailedEngineeringTeam(currentSelectedProjects[0].id);
-                    } else {
-                        showCenteredNotification('Please select exactly one project to edit the engineering team.', 'warning');
-                    }
-                };
                 
-                // When track record modal is opened, check if we should show detailed engineering instead
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('edit_engineering') === 'true' && selectedProjects.length === 1) {
-                    const projectId = selectedProjects[0].id;
-                    
-                    // Close track record modal first
-                    ModalManager.closeModal('trackRecordModal');
-                    
-                    // Small delay to allow modal to close before opening the next one
-                    setTimeout(() => {
-                        // Show the detailed engineering modal
-                        const modal = document.getElementById('editDetailedEngineeringModal');
-                        if (modal) {
-                            // Set the project ID in the modal
-                            modal.setAttribute('data-project-id', projectId);
-                            
-                            // Show loading state
-                            const teamList = document.getElementById('engineeringTeamList');
-                            teamList.innerHTML = `
-                                <div class="text-center py-8 text-gray-400">
-                                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                                    <p>Loading team information...</p>
-                                </div>
-                            `;
-                            
-                            // Show the modal using the modal manager to ensure proper stacking
-                            ModalManager.openModal('editDetailedEngineeringModal');
-                            
-                            // Load the team data
-                            fetch(`/projects/${projectId}/monthly-assignments`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    renderDetailedEngineeringTeam(data.monthly_assignments || []);
-                                })
-                                .catch(error => {
-                                    console.error('Error loading team data:', error);
-                                    teamList.innerHTML = `
-                                        <div class="text-center py-8 text-red-500">
-                                            <div class="text-4xl mb-2">⚠️</div>
-                                            <p>Failed to load team information.</p>
-                                            <button onclick="loadDetailedEngineeringTeam(${projectId})" 
-                                                    class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
-                                                Try Again
-                                            </button>
-                                        </div>
-                                    `;
-                                });
-                            
-                            // Remove the query parameter from URL
-                            const url = new URL(window.location);
-                            url.searchParams.delete('edit_engineering');
-                            window.history.replaceState({}, '', url);
-                        } else {
-                            console.error('Detailed engineering modal not found');
-                            showCenteredNotification('Error: Could not open detailed engineering editor', 'error', 2000);
-                            // Reopen track record modal if there was an error
-                            ModalManager.openModal('trackRecordModal');
-                        }
-                    }, 300); // 300ms delay to allow modal to close
-                }
+                
+
             } catch (error) {
                 console.error('Error loading track records:', error);
                 
@@ -3095,8 +3568,8 @@ if (editExpenseForm) {
                 // Wait a bit for modal to load, then trigger print
                 setTimeout(() => {
                     printReceipt();
-                }, 2000);
-                showCenteredNotification(`Preparing to print receipt for ${selectedProjects[0].name}...`, 'info', 2000);
+                }, 1000);
+                showCenteredNotification(`Preparing to print receipt for ${selectedProjects[0].name}...`, 'info', 1000);
             } else {
                 // Multiple projects - open combined receipt in modal and trigger print
                 const projectIds = selectedProjects.map(p => p.id);
@@ -3105,7 +3578,7 @@ if (editExpenseForm) {
                 setTimeout(() => {
                     printReceipt();
                 }, 1000);
-                showCenteredNotification(`Preparing to print combined receipt for ${selectedProjects.length} projects...`, 'info', 2000);
+                showCenteredNotification(`Preparing to print combined receipt for ${selectedProjects.length} projects...`, 'info', 1000);
             }
         }
 
@@ -3116,12 +3589,12 @@ if (editExpenseForm) {
             if (selectedProjects.length === 1) {
                 // Single project - open in modal
                 openReceiptModal(selectedProjects[0].id);
-                showCenteredNotification(`Opening receipt for ${selectedProjects[0].name}...`, 'info', 2000);
+                showCenteredNotification(`Opening receipt for ${selectedProjects[0].name}...`, 'info', 1000);
             } else {
                 // Multiple projects - open combined receipt in modal
                 const projectIds = selectedProjects.map(p => p.id);
                 openReceiptModal(null, true, projectIds);
-                showCenteredNotification(`Opening combined receipt for ${selectedProjects.length} projects...`, 'info', 2000);
+                showCenteredNotification(`Opening combined receipt for ${selectedProjects.length} projects...`, 'info', 1000);
             }
         }
 
@@ -3136,8 +3609,16 @@ if (editExpenseForm) {
             // Store project ID for the update
             document.getElementById('editExpenseForm').dataset.projectId = projectId;
 
-            // Show the edit modal
-            ModalManager.openModal('editExpenseModal');
+            // Show the edit modal without closing the track record modal
+            const editModal = document.getElementById('editExpenseModal');
+            if (editModal) {
+                editModal.classList.remove('hidden');
+                // Add to stack if not already there
+                if (!ModalManager.modalStack.includes('editExpenseModal')) {
+                    ModalManager.modalStack.push('editExpenseModal');
+                    console.log('Modal opened with stack:', ModalManager.modalStack);
+                }
+            }
         }
 
         // Delete expense function
@@ -3150,51 +3631,232 @@ if (editExpenseForm) {
         // Track if a notification is currently being shown
         let isNotificationActive = false;
 
-        // Update expense API call
-        async function updateExpense(expenseId, description, amount, date, projectId) {
+        // Refresh track record data via AJAX
+        async function refreshTrackRecord(projectId) {
+            try {
+                const response = await fetch(`/api/projects/${projectId}/fresh-track-record`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the detailed engineering cost display
+                    const engineeringCostElement = document.querySelector('[data-engineering-cost]');
+                    if (engineeringCostElement) {
+                        engineeringCostElement.textContent = `₱${parseFloat(data.detailed_engineering_cost).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                    
+                    // Update the total spent display
+                    const totalSpentElement = document.querySelector('[data-total-spent]');
+                    if (totalSpentElement) {
+                        totalSpentElement.textContent = `₱${parseFloat(data.total_spent_with_engineering).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                    
+                    // Update the remaining budget display
+                    const remainingBudgetElement = document.querySelector('[data-remaining-budget]');
+                    if (remainingBudgetElement) {
+                        remainingBudgetElement.textContent = `₱${parseFloat(data.remaining_budget).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                    
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error refreshing track record:', error);
+                return false;
+            }
+        }
+
+        // Update expense API call - handles both regular and virtual (auto-generated) expenses
+        async function updateExpense(expenseId, description, amount, date, projectId, isVirtual = false) {
             // Prevent multiple notifications
             if (isNotificationActive) return;
             
+            // Show loading state
+            const loadingElement = document.querySelector(`[data-expense-id="${expenseId}"]`);
+            if (loadingElement) {
+                loadingElement.classList.add('opacity-50', 'pointer-events-none');
+            }
+            
             try {
                 isNotificationActive = true;
-                console.log('Updating expense:', { expenseId, description, amount, date, projectId });
+                console.log('Updating expense:', { expenseId, description, amount, date, projectId, isVirtual });
 
-                const response = await fetch(`{{ url('/expenses') }}/${expenseId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        project_id: parseInt(projectId),
-                        description: description,
-                        amount: amount,
-                        date: date
-                    })
-                });
+                // Prepare the request data
+                const requestData = {
+                    project_id: parseInt(projectId),
+                    description: description,
+                    amount: parseFloat(amount) || 0,
+                    date: date,
+                    is_virtual: isVirtual
+                };
+
+                let response;
+                
+                if (isVirtual || !expenseId) {
+                    // For virtual expenses or when no ID is provided, create a new expense
+                    console.log('Creating new expense for virtual/zero-amount expense');
+                    response = await fetch(`{{ url('/expenses') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                } else {
+                    // For existing expenses, update the specific one
+                    console.log('Updating existing expense');
+                    response = await fetch(`{{ url('/expenses') }}/${expenseId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                }
 
                 console.log('Response status:', response.status);
 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Update successful:', result);
+                    console.log('Expense saved successfully:', result);
                     
                     // Show success notification
-                    showCenteredNotification('Expense updated successfully!', 'success', 1000);
+                    showNotification('Expense updated successfully', 'success');
+                
+                // Close the edit modal if open
+                const modal = document.getElementById('editExpenseModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+                
+                // Refresh the track record data
+                try {
+                    await refreshTrackRecord(projectId);
+                } catch (error) {
+                    console.error('Error refreshing track record:', error);
+                }
                     
-                    // Refresh the track record modal with minimal delay
-                    setTimeout(() => {
-                        openMultipleTrackRecordModal(currentSelectedProjects);
-                        isNotificationActive = false;
-                    }, 50); // Reduced from 1000ms to 300ms for faster updates
+                    // Update the UI immediately
+                    const trackRecordModal = document.getElementById('trackRecordModal');
+                    if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                        // Find the expense row to update
+                        const expenseRow = isVirtual 
+                            ? null // Will be added as new row
+                            : document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+                        
+                        if (isVirtual) {
+                            // For virtual expenses, add a new row at the top
+                            const tbody = document.querySelector('#projectsContainer tbody');
+                            if (tbody) {
+                                const newRow = document.createElement('tr');
+                                newRow.className = 'hover:bg-blue-50 transition-colors duration-150';
+                                newRow.setAttribute('data-expense-id', result.id || '');
+                                newRow.innerHTML = `
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${new Date(date).toLocaleDateString()}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                                        ${description}
+                                    </td>
+                                    <td class="px-4 py-3 text-sm font-bold text-red-700">₱${parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <button class="edit-expense-btn bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
+                                            data-expense-id="${result.id || ''}"
+                                            data-description="${description.replace(/"/g, '&quot;')}"
+                                            data-amount="${amount}"
+                                            data-date="${date}"
+                                            data-project-id="${projectId}"
+                                            data-is-virtual="false">
+                                            Edit
+                                        </button>
+                                        <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
+                                            data-expense-id="${result.id || ''}"
+                                            data-description="${description.replace(/"/g, '&quot;')}">
+                                            Delete
+                                        </button>
+                                    </td>
+                                `;
+                                tbody.insertBefore(newRow, tbody.firstChild);
+                            }
+                        } else if (expenseRow) {
+                            // For existing expenses, update the row
+                            const cells = expenseRow.querySelectorAll('td');
+                            if (cells.length >= 3) {
+                                // Update date
+                                cells[0].textContent = new Date(date).toLocaleDateString();
+                                // Update description
+                                const descCell = cells[1];
+                                if (descCell) {
+                                    descCell.innerHTML = `
+                                        ${description}
+                                        <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Updated</span>
+                                    `;
+                                }
+                                // Update amount
+                                cells[2].innerHTML = `₱${parseFloat(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                
+                                // Update action buttons
+                                if (cells[3]) {
+                                    cells[3].innerHTML = `
+                                        <button class="edit-expense-btn bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1 rounded-md mr-2 font-medium text-xs transition-colors duration-150"
+                                            data-expense-id="${result.id || expenseId}"
+                                            data-description="${description.replace(/"/g, '&quot;')}"
+                                            data-amount="${amount}"
+                                            data-date="${date}"
+                                            data-project-id="${projectId}"
+                                            data-is-virtual="false">
+                                            Edit
+                                        </button>
+                                        <button class="delete-expense-btn bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-md font-medium text-xs transition-colors duration-150"
+                                            data-expense-id="${result.id || expenseId}"
+                                            data-description="${description.replace(/"/g, '&quot;')}">
+                                            Delete
+                                        </button>
+                                    `;
+                                }
+                                
+                                // Add visual feedback
+                                expenseRow.classList.add('bg-green-50');
+                                setTimeout(() => {
+                                    expenseRow.classList.remove('bg-green-50');
+                                    if (descCell) {
+                                        descCell.innerHTML = description;
+                                    }
+                                }, 1000);
+                            }
+                        }
+                        
+                        // Update summary cards if they exist
+                        const summaryCards = document.querySelectorAll('.summary-card');
+                        if (summaryCards.length > 0) {
+                            // Trigger a custom event to update the summary cards
+                            const event = new CustomEvent('expenseUpdated', { 
+                                detail: { 
+                                    expenseId: result.id || expenseId,
+                                    amount: parseFloat(amount),
+                                    isNew: isVirtual
+                                } 
+                            });
+                            document.dispatchEvent(event);
+                        }
+                    }
+                    
+                    isNotificationActive = false;
                 } else {
                     const errorText = await response.text();
-                    console.error('Update failed:', response.status, errorText);
-                    let errorMessage = 'Error updating expense';
+                    console.error('Save/Update failed:', response.status, errorText);
+                    let errorMessage = 'Error saving expense';
                     try {
                         const errorData = JSON.parse(errorText);
                         errorMessage = errorData.message || errorMessage;
+                        // Show validation errors if available
+                        if (errorData.errors) {
+                            const firstError = Object.values(errorData.errors)[0];
+                            if (firstError && firstError.length > 0) {
+                                errorMessage = firstError[0];
+                            }
+                        }
                     } catch (e) {
                         // If not JSON, use the text as error message
                         errorMessage = errorText || errorMessage;
@@ -3463,16 +4125,25 @@ if (editExpenseForm) {
             let visibleCount = 0;
 
             projectCards.forEach(card => {
-                const projectName = card.querySelector('.project-name')?.textContent.toLowerCase() || '';
-                const fppCode = card.querySelector('.fpp-code')?.textContent.toLowerCase() || '';
-                const engineerName = card.querySelector('.engineer-name')?.textContent.toLowerCase() || '';
-                const projectDescription = card.querySelector('.project-description')?.textContent.toLowerCase() || '';
+                // Get project name from h3 element
+                const projectName = card.querySelector('h3')?.textContent.toLowerCase() || '';
+                
+                // Get FPP code from the p element containing 'F/P/P:'
+                const fppElement = Array.from(card.querySelectorAll('p')).find(p => p.textContent.includes('F/P/P:'));
+                const fppCode = fppElement ? fppElement.textContent.toLowerCase() : '';
+                
+                // Get engineer information if available
+                const engineerElement = card.querySelector('.engineer-name');
+                const engineerName = engineerElement ? engineerElement.textContent.toLowerCase() : '';
+                const engineerSpecialization = engineerElement && engineerElement.nextElementSibling && 
+                                            engineerElement.nextElementSibling.classList.contains('text-gray-300') ? 
+                                            engineerElement.nextElementSibling.textContent.toLowerCase() : '';
 
-                // Search in project name, F/P/P code, engineer name, and description
+                // Search in project name, F/P/P code, engineer name, and specialization
                 const isMatch = projectName.includes(searchTerm) || 
                                fppCode.includes(searchTerm) || 
-                               engineerName.includes(searchTerm) || 
-                               projectDescription.includes(searchTerm);
+                               engineerName.includes(searchTerm) ||
+                               engineerSpecialization.includes(searchTerm);
 
                 if (isMatch || searchTerm === '') {
                     card.style.display = 'block';
@@ -3798,7 +4469,7 @@ if (editExpenseForm) {
                     if (mobileIndicator.parentNode) {
                         mobileIndicator.remove();
                     }
-                }, 5000);
+                }, 1000);
                 
                 console.log('Mobile styles applied successfully!');
             }
@@ -3817,6 +4488,49 @@ if (editExpenseForm) {
         }
         
 
+        
+        // Event listener for expense updates to refresh summary cards
+        document.addEventListener('expenseUpdated', function(e) {
+            const { amount, isNew } = e.detail;
+            const summaryCards = document.querySelectorAll('.summary-card');
+            
+            summaryCards.forEach(card => {
+                // Update total spent
+                const spentElement = card.querySelector('.spent-amount');
+                if (spentElement) {
+                    const currentSpent = parseFloat(spentElement.textContent.replace(/[^\d.-]/g, '')) || 0;
+                    const newSpent = isNew ? currentSpent + amount : currentSpent;
+                    spentElement.textContent = newSpent.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    // Update remaining budget
+                    const totalBudget = parseFloat(card.getAttribute('data-budget') || 0);
+                    if (totalBudget) {
+                        const remainingElement = card.querySelector('.remaining-amount');
+                        if (remainingElement) {
+                            const remaining = totalBudget - newSpent;
+                            remainingElement.textContent = remaining.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            
+                            // Update color based on remaining amount
+                            remainingElement.classList.remove('text-green-700', 'text-red-700');
+                            remainingElement.classList.add(remaining >= 0 ? 'text-green-700' : 'text-red-700');
+                            
+                            // Update percentage used
+                            const percentUsed = (newSpent / totalBudget) * 100;
+                            const percentElement = card.querySelector('.percent-used');
+                            if (percentElement) {
+                                percentElement.textContent = percentUsed.toFixed(1);
+                            }
+                        }
+                    }
+                }
+            });
+        });
         
         // Skeleton Loading Management
         class SkeletonLoader {
@@ -3908,7 +4622,7 @@ if (editExpenseForm) {
                             if (skeletonOverlay.parentNode) {
                                 skeletonOverlay.remove();
                             }
-                        }, 2000);
+                        }, 1000);
                     }
                 }
             }
@@ -4157,7 +4871,7 @@ if (editExpenseForm) {
                     data[key] = value;
                 });
                 
-                // Send the request
+                // Send the request - bypassing HTML5 validation for required fields
                 const response = await fetch(form.action || '/projects', {
                     method: 'POST',
                     headers: {
@@ -4175,7 +4889,7 @@ if (editExpenseForm) {
                 }
                 
                 // Show success message
-                showCenteredNotification('Project saved successfully!', 'success', 2000);
+                showCenteredNotification('Project saved successfully!', 'success', 1000);
                 
                 // Close the project modal and open the expense modal
                 ModalManager.closeModal('addProjectModal');
@@ -4239,8 +4953,14 @@ if (editExpenseForm) {
                 const teamHeadBadge = clone.querySelector('.team-head-badge');
                 const projectEngineerBadge = clone.querySelector('.project-engineer-badge');
                 const deleteBtn = clone.querySelector('.delete-engineer-btn');
+                const saveBtn = clone.querySelector('.save-salary-btn');
                 
-                // Set engineer data
+                // Ensure salary input is enabled
+                if (salaryInput) {
+                    salaryInput.disabled = false;
+                    salaryInput.classList.remove('disabled:bg-gray-100', 'disabled:text-gray-400');
+                }
+                
                 row.setAttribute('data-engineer-id', assignment.engineer_id);
                 nameElement.textContent = assignment.engineer_name;
                 salaryInput.value = assignment.salary || '';
@@ -4269,16 +4989,138 @@ if (editExpenseForm) {
                     teamHeadBadge.classList.toggle('hidden', !isTeamHead);
                 });
                 
-                deleteBtn.addEventListener('click', function() {
-                    row.remove();
+                deleteBtn.addEventListener('click', async function() {
+                    const engineerId = row.getAttribute('data-engineer-id');
+                    const engineerName = nameElement.textContent;
+                    const projectId = document.querySelector('#editDetailedEngineeringModal').getAttribute('data-project-id');
+                    
+                    // Confirm deletion
+                    if (!confirm(`Are you sure you want to remove ${engineerName} from this project?`)) {
+                        return;
+                    }
+                    
+                    try {
+                        // Show loading state
+                        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        deleteBtn.disabled = true;
+                        
+                        const now = new Date();
+                        const response = await fetch(`/monthly-assignments/remove-engineer`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                project_id: projectId,
+                                engineer_id: engineerId,
+                                year: now.getFullYear(),
+                                month: now.getMonth() + 1 // JavaScript months are 0-indexed
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to remove engineer');
+                        }
+                        
+                        // Remove the row from the UI
+                        row.remove();
+                        showCenteredNotification('Engineer removed successfully!', 'success', 1000);
+                        
+                        // Refresh the track record modal if it's open
+                        const trackRecordModal = document.getElementById('trackRecordModal');
+                        if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                            const trackRecordProjectId = trackRecordModal.getAttribute('data-project-id');
+                            if (trackRecordProjectId) {
+                                if (window.currentSelectedProjects && window.currentSelectedProjects.length > 0) {
+                                    openMultipleTrackRecordModal(window.currentSelectedProjects);
+                                } else if (window.openTrackRecordModal) {
+                                    window.openTrackRecordModal(trackRecordProjectId);
+                                }
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error removing engineer:', error);
+                        showCenteredNotification('Failed to remove engineer. Please try again.', 'error', 1000);
+                    } finally {
+                        deleteBtn.disabled = false;
+                        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    }
                 });
                 
                 teamList.appendChild(clone);
             });
         }
         
-        // Load detailed engineering team data
-        window.loadDetailedEngineeringTeam = function(projectId) {
+                 // Open Edit Detailed Engineering Modal
+         window.openEditDetailedEngineeringModal = function(projectId, projectName) {
+             console.log('Opening edit detailed engineering modal for project:', projectId, projectName);
+             
+             // Set the project ID and name in the modal
+             const modal = document.getElementById('editDetailedEngineeringModal');
+             if (!modal) {
+                 console.error('Edit detailed engineering modal not found');
+                 showCenteredNotification('Error: Could not open detailed engineering editor', 'error', 1000);
+                 return;
+             }
+             
+             // Set the project ID on the modal for later use
+             modal.setAttribute('data-project-id', projectId);
+             
+             modal.setAttribute('data-project-id', projectId);
+             modal.setAttribute('data-project-name', projectName);
+             
+             // Update modal title
+             const modalTitle = modal.querySelector('h2 px-3');
+             if (modalTitle) {
+                 modalTitle.textContent = `Edit Detailed Engineering - ${projectName}`;
+             }
+             
+             // Show loading state
+             const teamList = document.getElementById('engineeringTeamList');
+             teamList.innerHTML = `
+                 <div class="text-center py-8 text-gray-400">
+                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                     <p>Loading team information...</p>
+                 </div>
+             `;
+             
+             // Show the modal without closing the track record modal
+             if (!modal.classList.contains('hidden')) return; // Already open
+             
+             modal.classList.remove('hidden');
+             // Add to stack if not already there
+             if (!ModalManager.modalStack.includes('editDetailedEngineeringModal')) {
+                 ModalManager.modalStack.push('editDetailedEngineeringModal');
+                 console.log('Modal opened with stack:', ModalManager.modalStack);
+             }
+             
+             // Load the team data
+             fetch(`/projects/${projectId}/monthly-assignments`)
+                 .then(response => response.json())
+                 .then(data => {
+                     console.log('Team data loaded:', data);
+                     renderDetailedEngineeringTeam(data.monthly_assignments || []);
+                 })
+                 .catch(error => {
+                     console.error('Error loading team data:', error);
+                     teamList.innerHTML = `
+                         <div class="text-center py-8 text-red-500">
+                             <div class="text-4xl mb-2">⚠️</div>
+                             <p>Failed to load team information.</p>
+                             <button onclick="openEditDetailedEngineeringModal(${projectId}, '${projectName}')" 
+                                     class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                 Try Again
+                             </button>
+                         </div>
+                     `;
+                 });
+         };
+         
+         // Load detailed engineering team data
+         window.loadDetailedEngineeringTeam = function(projectId) {
             const modal = document.getElementById('editDetailedEngineeringModal');
             if (!modal) return;
             
@@ -4294,8 +5136,8 @@ if (editExpenseForm) {
                 </div>
             `;
             
-            // Show the modal if not already visible
-            modal.classList.remove('hidden');
+                         // Show the modal
+             ModalManager.openModal('editDetailedEngineeringModal');
             
             // Load the team data
             fetch(`/projects/${projectId}/monthly-assignments`)
@@ -4322,59 +5164,421 @@ if (editExpenseForm) {
                 });
         };
         
-        // Close detailed engineering modal when clicking the close button or outside
-        document.getElementById('closeEditDetailedEngineeringModal')?.addEventListener('click', function() {
-            document.getElementById('editDetailedEngineeringModal').classList.add('hidden');
-        });
+                 // Close detailed engineering modal when clicking the close button
+         document.getElementById('closeEditDetailedEngineeringModal')?.addEventListener('click', function(e) {
+             e.stopPropagation();
+             const modal = document.getElementById('editDetailedEngineeringModal');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 // Remove from stack
+                 const index = ModalManager.modalStack.indexOf('editDetailedEngineeringModal');
+                 if (index > -1) {
+                     ModalManager.modalStack.splice(index, 1);
+                     console.log('Modal closed with stack:', ModalManager.modalStack);
+                 }
+             }
+         });
+         
+         // Close modal when clicking outside the content
+         document.getElementById('editDetailedEngineeringModal')?.addEventListener('click', function(e) {
+             if (e.target === this) {
+                 ModalManager.closeModal('editDetailedEngineeringModal');
+             }
+         });
+         
+         // Handle cancel button click
+         document.getElementById('cancelEditDetailedEngineeringBtn')?.addEventListener('click', function() {
+             ModalManager.closeModal('editDetailedEngineeringModal');
+         });
         
-        // Close modal when clicking outside the content
-        document.getElementById('editDetailedEngineeringModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
-            }
-        });
-        
-        // Handle cancel button click
-        document.getElementById('cancelEditDetailedEngineeringBtn')?.addEventListener('click', function() {
-            document.getElementById('editDetailedEngineeringModal').classList.add('hidden');
-        });
-        
-        // Handle save button click (stub for now)
-        document.getElementById('saveDetailedEngineeringBtn')?.addEventListener('click', function() {
-            const modal = document.getElementById('editDetailedEngineeringModal');
-            const projectId = modal.getAttribute('data-project-id');
-            
-            // Show loading state
-            const originalButtonText = this.innerHTML;
-            this.disabled = true;
-            this.innerHTML = `
-                <i class="fas fa-spinner fa-spin mr-2"></i>
-                Saving...
-            `;
-            
-            // Simulate save (replace with actual save logic)
-            setTimeout(() => {
-                // Show success message
-                showCenteredNotification('Changes saved successfully', 'success');
+                 // Handle save button click
+         document.getElementById('saveDetailedEngineeringBtn')?.addEventListener('click', async function() {
+             const modal = document.getElementById('editDetailedEngineeringModal');
+             const projectId = modal.getAttribute('data-project-id');
+             
+             // Show loading state
+             const originalButtonText = this.innerHTML;
+             this.disabled = true;
+             this.innerHTML = `
+                 <i class="fas fa-spinner fa-spin mr-2"></i>
+                 Saving...
+             `;
+             
+             try {
+                 // Get all engineer rows
+                 const rows = document.querySelectorAll('#engineeringTeamList .team-member-row');
+                 const engineers = [];
+                 
+                 if (rows.length === 0) {
+                     throw new Error('Please add at least one engineer to the team');
+                 }
+                 
+                 rows.forEach(row => {
+                     const engineerId = row.getAttribute('data-engineer-id');
+                     const salaryInput = row.querySelector('.salary-input');
+                     const salary = salaryInput ? salaryInput.value : '';
+                     const roleSelect = row.querySelector('.role-select');
+                     const isTeamHead = roleSelect ? roleSelect.value === 'head' : false;
+                     
+                     // Only include engineers with a valid ID
+                     if (engineerId) {
+                         engineers.push({
+                             engineer_id: engineerId,
+                             salary: salary ? parseFloat(salary) : 0,
+                             is_active: true,
+                             is_team_head: isTeamHead
+                         });
+                     }
+                 });
+                 
+                 if (engineers.length === 0) {
+                     throw new Error('No valid engineers found in the team');
+                 }
+                 
+                 // Format the data as expected by the backend
+                const requestData = {
+                    team: engineers.map(eng => ({
+                        engineer_id: eng.engineer_id,
+                        salary: eng.salary,
+                        is_team_head: eng.is_team_head
+                    }))
+                };
                 
-                // Close the modal after a short delay
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    // Reset button state
-                    this.disabled = false;
-                    this.innerHTML = originalButtonText;
-                }, 1000);
-            }, 1000);
-        });
+                // Ensure we're sending proper JSON
+                const jsonData = JSON.stringify(requestData);
+                 
+                 console.log('Sending data:', jsonData); // Debug log
+               
+               const response = await fetch(`/projects/${projectId}/update-detailed-engineering`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                       'X-Requested-With': 'XMLHttpRequest',
+                       'Accept': 'application/json'
+                   },
+                   body: JSON.stringify(requestData)
+                 });
+                 
+                 const responseData = await response.json();
+                 
+                 if (!response.ok) {
+                     throw new Error(responseData.message || 'Failed to save changes');
+                 }
+                 
+                 // Show success message
+                 showCenteredNotification('Changes saved successfully!', 'success', 1000);
+                 
+                 // Close the modal after a short delay
+                 setTimeout(() => {
+                     ModalManager.closeModal('editDetailedEngineeringModal');
+                     
+                     // Refresh the track record for the current project
+                     const projectId = modal.getAttribute('data-project-id');
+                     if (projectId) {
+                         refreshTrackRecord(projectId).then(() => {
+                             // Show success notification
+                             showNotification('Detailed engineering team updated successfully', 'success');
+                         }).catch(error => {
+                             console.error('Error refreshing track record:', error);
+                         });
+                     }
+                     
+                     // Also refresh the track record modal if it's open
+                     const trackRecordModal = document.getElementById('trackRecordModal');
+                     if (trackRecordModal && !trackRecordModal.classList.contains('hidden')) {
+                         // Get the current project ID from the track record modal
+                         const trackRecordProjectId = trackRecordModal.getAttribute('data-project-id');
+                         if (trackRecordProjectId) {
+                             // Reopen the track record modal to refresh the data
+                             if (window.currentSelectedProjects && window.currentSelectedProjects.length > 0) {
+                                 // If we have multiple projects selected, refresh the multi-track record view
+                                 openMultipleTrackRecordModal(window.currentSelectedProjects);
+                             } else if (window.openTrackRecordModal) {
+                                 // If we have a single project, refresh the single track record view
+                                 window.openTrackRecordModal(trackRecordProjectId);
+                             } else {
+                                 // Fallback: reload the page
+                                 window.location.reload();
+                             }
+                         }
+                     }
+                 }, 500);
+                 
+             } catch (error) {
+                 console.error('Error saving team data:', error);
+                 showCenteredNotification(error.message || 'An error occurred while saving team data', 'error', 1000);
+             } finally {
+                 // Reset button state
+                 this.disabled = false;
+                 this.innerHTML = originalButtonText;
+             }
+         });
         
         // Initialize detailed engineering modal
         document.addEventListener('DOMContentLoaded', function() {
-            const expenseForm = document.getElementById('addExpenseForm');
-                console.log('Looking for expense form:', expenseForm);
-                if (!expenseForm) {
-                    console.error('Expense form not found');
+            // Event delegation for Apply button in Monthly Engineer Assignments page
+            document.addEventListener('click', async function(e) {
+                // Check if the clicked element is an Apply button or a child of an Apply button
+                const applyBtn = e.target.closest('.apply-salary-btn');
+                
+                if (applyBtn) {
+                    e.preventDefault();
+                    
+                    const row = applyBtn.closest('tr');
+                    const engineerId = row.getAttribute('data-engineer-id');
+                    const projectId = document.querySelector('#editDetailedEngineeringModal').getAttribute('data-project-id');
+                    const salaryInput = row.querySelector('.salary-input');
+                    const salary = salaryInput ? salaryInput.value : '';
+                    
+                    if (!engineerId || !projectId) {
+                        showCenteredNotification('Invalid engineer or project', 'error', 1000);
+                        return;
+                    }
+                    
+                    // Show loading state
+                    const originalText = applyBtn.innerHTML;
+                    applyBtn.disabled = true;
+                    applyBtn.innerHTML = '<span class="animate-spin">⏳</span>';
+                    
+                    try {
+                        const response = await fetch('/monthly-assignments/update-salary', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                engineer_id: engineerId,
+                                project_id: projectId,
+                                salary: salary
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            showCenteredNotification(data.message || 'Salary updated successfully', 'success', 1000);
+                            // Refresh the page to reflect changes
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            throw new Error(data.message || 'Failed to update salary');
+                        }
+                    } catch (error) {
+                        console.error('Error updating salary:', error);
+                        showCenteredNotification(error.message || 'An error occurred while updating the salary', 'error', 1000);
+                    } finally {
+                        // Reset button state
+                        applyBtn.disabled = false;
+                        applyBtn.innerHTML = originalText;
+                    }
+                }
+            });
+            // Handle Add Engineer button click - redirect to project's monthly assignments
+            window.handleAddEngineerClick = function(e) {
+                console.log('Add Engineer button clicked');
+                e.preventDefault();
+                // Get the project ID and name from the modal
+                const modal = document.getElementById('editDetailedEngineeringModal');
+                console.log('Modal element:', modal);
+                const projectId = modal ? modal.getAttribute('data-project-id') : null;
+                console.log('Project ID from modal:', projectId);
+                
+                if (projectId) {
+                    console.log('Found project ID, proceeding with redirect');
+                    // Close the modal
+                    const modalInstance = bootstrap.Modal.getInstance(modal);
+                    console.log('Modal instance:', modalInstance);
+                    if (modalInstance) {
+                        console.log('Hiding modal');
+                        modalInstance.hide();
+                    }
+                    
+                    // Redirect to the monthly assignments page with the project ID
+                    window.location.href = `/monthly-assignments?project_id=${projectId}`;
                     return;
                 }
+                
+                // Fallback to old behavior if project ID is not found
+                const addEngineerForm = document.getElementById('addEngineerForm');
+                if (addEngineerForm) {
+                    addEngineerForm.classList.remove('hidden');
+                    // Scroll to the form
+                    addEngineerForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    // Focus the name input
+                    const nameInput = document.getElementById('newEngineerName');
+                    if (nameInput) nameInput.focus();
+                }
+            }
+            
+            // Handle cancel button in the add engineer form
+            function handleCancelAddEngineer(e) {
+                e.preventDefault();
+                const addEngineerForm = document.getElementById('addEngineerForm');
+                if (addEngineerForm) {
+                    addEngineerForm.classList.add('hidden');
+                    // Reset form
+                    document.getElementById('addEngineerFormElement').reset();
+                }
+            }
+            
+            // Handle save new engineer button
+            async function handleSaveNewEngineer(e) {
+                e.preventDefault();
+                
+                const nameInput = document.getElementById('newEngineerName');
+                const salaryInput = document.getElementById('newEngineerSalary');
+                const isTeamHead = document.getElementById('newEngineerIsTeamHead').checked;
+                
+                if (!nameInput.value.trim()) {
+                    showCenteredNotification('Please enter engineer name', 'error', 1000);
+                    nameInput.focus();
+                    return;
+                }
+                
+                if (!salaryInput.value || parseFloat(salaryInput.value) <= 0) {
+                    showCenteredNotification('Please enter a valid salary', 'error', 1000);
+                    salaryInput.focus();
+                    return;
+                }
+                
+                try {
+                    // Get the project ID from the modal
+                    const modal = document.getElementById('editDetailedEngineeringModal');
+                    const projectId = modal ? modal.getAttribute('data-project-id') : null;
+                    
+                    if (!projectId) {
+                        throw new Error('Project ID not found');
+                    }
+                    
+                    // Prepare the data for the API
+                    const formData = new FormData();
+                    formData.append('name', nameInput.value.trim());
+                    formData.append('salary', parseFloat(salaryInput.value).toFixed(2));
+                    formData.append('is_team_head', isTeamHead ? '1' : '0');
+                    formData.append('project_id', projectId);
+                    formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                    
+                    // Make the API call to add the engineer
+                    const response = await fetch('/api/projects/add-engineer', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Failed to add engineer');
+                    }
+                    
+                    // Add the new engineer to the UI
+                    const template = document.getElementById('teamMemberTemplate');
+                    const clone = document.importNode(template.content, true);
+                    const row = clone.querySelector('.team-member-row');
+                    row.setAttribute('data-engineer-id', data.engineer.id);
+                    
+                    const nameElement = clone.querySelector('.engineer-name');
+                    const salaryInputField = clone.querySelector('.salary-input');
+                    const roleSelect = clone.querySelector('.role-select');
+                    
+                    nameElement.textContent = data.engineer.name;
+                    salaryInputField.value = parseFloat(data.engineer.salary).toFixed(2);
+                    
+                    if (data.engineer.is_team_head) {
+                        roleSelect.value = 'head';
+                        const teamHeadBadge = row.querySelector('.team-head-badge');
+                        if (teamHeadBadge) teamHeadBadge.classList.remove('hidden');
+                    }
+                    
+                    // Add to the team list
+                    const teamList = document.getElementById('engineeringTeamList');
+                    if (teamList) {
+                        // Remove any loading message if present
+                        if (teamList.querySelector('.text-center')) {
+                            teamList.innerHTML = '';
+                        }
+                        teamList.prepend(row);
+                    }
+                    
+                    // Hide and reset the form
+                    const addEngineerForm = document.getElementById('addEngineerForm');
+                    if (addEngineerForm) {
+                        addEngineerForm.classList.add('hidden');
+                        document.getElementById('addEngineerFormElement').reset();
+                    }
+                    
+                    showCenteredNotification('Engineer added successfully', 'success', 1000);
+                    
+                } catch (error) {
+                    console.error('Error adding engineer:', error);
+                    showCenteredNotification(error.message || 'Failed to add engineer', 'error', 1000);
+                }
+            }
+            
+            // Set up event delegation for dynamically loaded content
+            document.addEventListener('click', function(e) {
+                // Handle Add Engineer button click - using closest to handle both button and icon clicks
+                const addEngineerBtn = e.target.closest('#addEngineerBtn');
+                if (addEngineerBtn) {
+                    console.log('Add Engineer button clicked (global handler)');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleAddEngineerClick(e);
+                }
+                
+                // Handle cancel button in the add engineer form
+                if (e.target.closest('#cancelAddEngineer')) {
+                    e.preventDefault();
+                    handleCancelAddEngineer(e);
+                }
+                
+                // Handle save new engineer button
+                if (e.target.closest('#saveNewEngineer') || e.target.closest('#addEngineerFormElement')) {
+                    e.preventDefault();
+                    handleSaveNewEngineer(e);
+                }
+            });
+            
+            // Also set up direct event listeners when the modal is opened
+            const editModal = document.getElementById('editDetailedEngineeringModal');
+            if (editModal) {
+                // Add click listener to the modal itself for better event delegation
+                editModal.addEventListener('click', function(e) {
+                    // Handle Add Engineer button click
+                    const addEngineerBtn = e.target.closest('#addEngineerBtn');
+                    if (addEngineerBtn) {
+                        console.log('Add Engineer button clicked (modal handler)');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddEngineerClick(e);
+                    }
+                    
+                    // Handle cancel button in the add engineer form
+                    if (e.target.closest('#cancelAddEngineer')) {
+                        e.preventDefault();
+                        handleCancelAddEngineer(e);
+                    }
+                    
+                    // Handle save new engineer button
+                    if (e.target.closest('#saveNewEngineer') || e.target.closest('#addEngineerFormElement')) {
+                        e.preventDefault();
+                        handleSaveNewEngineer(e);
+                    }
+                });
+            }
+            
+            const expenseForm = document.getElementById('addExpenseForm');
+            if (!expenseForm) {
+                console.error('Expense form not found');
+                return;
+            }
             
             // Format amount inputs to 2 decimal places on blur
             expenseForm.addEventListener('blur', function(e) {
@@ -4395,16 +5599,7 @@ if (editExpenseForm) {
                 const amountInputs = this.querySelectorAll('input[type="number"]');
                 let hasAmount = false;
                 
-                // Check if at least one amount is greater than 0
-                amountInputs.forEach(input => {
-                    const value = parseFloat(input.value) || 0;
-                    if (value > 0) hasAmount = true;
-                });
-                
-                if (!hasAmount) {
-                    showCenteredNotification('Please enter at least one expense amount', 'error', 1000);
-                    return;
-                }
+                // Allow zero or blank amounts - no validation needed
                 
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
@@ -4880,10 +6075,105 @@ function performAjaxWithLoading(options) {
 
     </div> <!-- Close main content div -->
     
-    @include('projects.partials.edit_detailed_engineering_modal')
+         @include('projects.partials.edit_detailed_engineering_modal')
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.three-dot-menu')) {
+                    document.querySelectorAll('.three-dot-menu + div').forEach(menu => {
+                        menu.classList.add('hidden');
+                    });
+                }
+            });
+
+            // Toggle dropdown menu
+            document.querySelectorAll('.three-dot-menu').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const menu = this.nextElementSibling;
+                    const isHidden = menu.classList.contains('hidden');
+                    
+                    // Hide all other open menus
+                    document.querySelectorAll('.three-dot-menu + div').forEach(m => {
+                        if (m !== menu) m.classList.add('hidden');
+                    });
+                    
+                    // Toggle current menu
+                    menu.classList.toggle('hidden', !isHidden);
+                });
+            });
+
+            // Handle archive and delete button clicks
+            document.querySelectorAll('.archive-project-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const projectId = this.dataset.projectId;
+                    const projectName = this.dataset.projectName;
+                    
+                    // Show confirmation dialog
+                    showConfirmationDialog(
+                        `Are you sure you want to archive the project "${projectName}"?`,
+                        () => {
+                            // Close any open dropdown menus
+                            document.querySelectorAll('.three-dot-menu + div').forEach(menu => {
+                                menu.classList.add('hidden');
+                            });
+                            
+                            // Submit the archive form
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/projects/${projectId}/archive`;
+                            form.innerHTML = `
+                                @csrf
+                                @method('PATCH')
+                            `;
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    );
+                });
+            });
+
+            document.querySelectorAll('.delete-project-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const projectId = this.dataset.projectId;
+                    const projectName = this.dataset.projectName;
+                    
+                    // Show confirmation dialog
+                    showConfirmationDialog(
+                        `Are you sure you want to delete the project "${projectName}"? This action cannot be undone.`,
+                        () => {
+                            // Close any open dropdown menus
+                            document.querySelectorAll('.three-dot-menu + div').forEach(menu => {
+                                menu.classList.add('hidden');
+                            });
+                            
+                            // Submit the delete form
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/projects/${projectId}`;
+                            form.innerHTML = `
+                                @csrf
+                                @method('DELETE')
+                            `;
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    );
+                });
+            });
+        });
+    </script>
     
-    <!-- Load Detailed Engineering JavaScript -->
-    <script src="{{ asset('js/detailed-engineering.js') }}"></script>
-    
+    <!-- Project Card Click Handler -->
+    <script src="{{ asset('js/project-card-handler.js') }}"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Models\DetailedEngineering;
 
 class ProjectController extends Controller
 {
@@ -35,12 +36,20 @@ class ProjectController extends Controller
     $totalBudget = $projects->sum('budget');
     $activeProjects = $projects->count(); // All non-archived, non-deleted
     $avgBudget = $projects->count() > 0 ? $projects->avg('budget') : 0;
+    
+    // Calculate total spent including detailed engineering costs
+    $totalSpent = $projects->sum(function($project) {
+        return $project->totalSpentWithDetailedEngineering();
+    });
+    $remainingBudget = max(0, $totalBudget - $totalSpent);
 
     return view('projects.index', [
         'projects' => $projects,
         'totalBudget' => $totalBudget,
         'activeProjects' => $activeProjects,
-        'avgBudget' => $avgBudget
+        'avgBudget' => $avgBudget,
+        'totalSpent' => $totalSpent,
+        'remainingBudget' => $remainingBudget
     ]);
 }
 
@@ -148,6 +157,116 @@ class ProjectController extends Controller
 
         // Return redirect for regular form submissions
         return redirect()->route('projects.index')->with('success', 'Project updated successfully');
+    }
+
+    /**
+     * Update detailed engineering data for a project
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Project  $project
+     * @return \Illuminate\Http\Response
+     */
+    public function updateDetailedEngineering(Request $request, Project $project)
+    {
+        // Log the incoming request data for debugging
+        \Log::info('Received detailed engineering update request:', [
+            'project_id' => $project->id,
+            'request_data' => $request->all(),
+            'request_headers' => $request->headers->all(),
+            'request_content_type' => $request->header('Content-Type'),
+            'request_method' => $request->method()
+        ]);
+
+        // Manually log the raw input for debugging
+        \Log::info('Raw input data: ' . file_get_contents('php://input'));
+
+        // Validate the request data
+        $validated = $request->validate([
+            'team' => 'required|array',
+            'team.*.engineer_id' => 'required|exists:engineers,id',
+            'team.*.salary' => 'required|numeric|min:0',
+        ]);
+
+        \Log::info('Validation passed', ['validated_data' => $validated]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get current month and year
+            $year = now()->year;
+            $month = now()->month;
+            
+            // First, deactivate all current assignments for this project
+            $project->monthlyAssignments()
+                ->where('year', $year)
+                ->where('month', $month)
+                ->update(['is_active' => false]);
+                
+            // Update or create detailed engineering records
+            foreach ($request->team as $member) {
+                // Find or create the monthly assignment
+                $assignment = $project->monthlyAssignments()->updateOrCreate(
+                    [
+                        'engineer_id' => $member['engineer_id'],
+                        'year' => $year,
+                        'month' => $month
+                    ],
+                    [
+                        'salary' => $member['salary'],
+                        'is_team_head' => $member['is_team_head'] ?? false,
+                        'is_active' => true
+                    ]
+                );
+                
+                // If this is a team head, ensure no other team heads exist for this project
+                if ($member['is_team_head'] ?? false) {
+                    $project->monthlyAssignments()
+                        ->where('year', $year)
+                        ->where('month', $month)
+                        ->where('engineer_id', '!=', $member['engineer_id'])
+                        ->update(['is_team_head' => false]);
+                }
+            }
+
+            DB::commit();
+            
+            // Refresh the project to get updated relationships
+            $project->load('monthlyAssignments.engineer');
+            
+            // Calculate updated project data
+            $totalSpent = $project->totalSpentWithDetailedEngineering();
+            $remainingBudget = $project->remainingBudgetWithDetailedEngineering();
+            $percentUsed = $project->budget > 0 ? ($totalSpent / $project->budget) * 100 : 0;
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Detailed engineering data updated successfully',
+                'projectData' => [
+                    'total_spent' => $totalSpent,
+                    'remaining_budget' => $remainingBudget,
+                    'percent_used' => $percentUsed,
+                    'engineers' => $project->monthlyAssignments->map(function($assignment) {
+                        return [
+                            'id' => $assignment->engineer_id,
+                            'name' => $assignment->engineer->name,
+                            'salary' => $assignment->salary,
+                            'is_team_head' => $assignment->is_team_head
+                        ];
+                    })->toArray()
+                ],
+                'project' => $project->load('detailedEngineeringTeam.engineer')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating detailed engineering: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update detailed engineering team',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Project $project)
@@ -306,39 +425,129 @@ class ProjectController extends Controller
         return redirect()->route('projects.recently-deleted')->with('success', "Project '{$projectName}' permanently deleted");
     }
 
+    /**
+     * Bulk restore multiple projects
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkRestore(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No projects selected.'
+            ], 400);
+        }
+
+        $restoredCount = 0;
+        
+        foreach ($ids as $id) {
+            $project = Project::onlyTrashed()->find($id);
+            
+            if ($project) {
+                $project->restore();
+                $restoredCount++;
+                
+                Log::info('Project restored', [
+                    'project_id' => $id,
+                    'user_id' => Auth::id()
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully restored {$restoredCount} project(s)."
+        ]);
+    }
+
+    /**
+     * Bulk force delete multiple projects
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        
+        if (empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No projects selected.'
+            ], 400);
+        }
+
+        $deletedCount = 0;
+        
+        foreach ($ids as $id) {
+            $project = Project::onlyTrashed()->find($id);
+            
+            if ($project) {
+                // Log the force delete action
+                Log::info('Force deleting project', [
+                    'project_id' => $project->id,
+                    'project_name' => $project->name,
+                    'user_id' => Auth::id(),
+                    'deleted_at' => $project->deleted_at
+                ]);
+
+                // Force delete all associated expenses first
+                $project->expenses()->onlyTrashed()->forceDelete();
+                
+                // Then force delete the project
+                $project->forceDelete();
+                $deletedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$deletedCount} project(s) permanently."
+        ]);
+    }
+
     public function trackRecord(Project $project)
     {
         $expenses = $project->expenses()->orderBy('date', 'desc')->get();
 
         // Get detailed engineering cost
         $detailedEngineeringCost = $project->getDetailedEngineeringCost();
-
-        // Create a virtual "Detailed Engineering" expense if there are engineer salaries
-        $allExpenses = $expenses->toArray();
         
-        // Check if there's already a "Detailed Engineering" expense in the database
-        $hasDetailedEngineeringExpense = $expenses->where('description', 'Detailed Engineering')->count() > 0;
+        // Get regular expenses (excluding any existing Detailed Engineering entries to prevent duplication)
+        $regularExpenses = $expenses->filter(function($expense) {
+            return $expense->description !== 'Detailed Engineering';
+        })->values();
         
-        if ($detailedEngineeringCost > 0 && !$hasDetailedEngineeringExpense) {
-            // Add virtual detailed engineering expense only if it doesn't exist
-            $detailedEngineeringExpense = [
-                'id' => 'detailed_engineering',
-                'project_id' => $project->id,
-                'description' => 'Detailed Engineering',
-                'amount' => $detailedEngineeringCost,
-                'date' => now()->format('Y-m-d'),
-                'created_at' => now(),
-                'updated_at' => now(),
-                'is_virtual' => true // Flag to identify this as a virtual expense
-            ];
+        $allExpenses = $regularExpenses->toArray();
+        
+        // Always add detailed engineering as a virtual expense, even with 0 amount
+        $detailedEngineeringExpense = [
+            'id' => 'detailed_engineering_' . time(),
+            'project_id' => $project->id,
+            'description' => 'Detailed Engineering',
+            'amount' => $detailedEngineeringCost, // Will be 0 if no team assigned
+            'date' => now()->format('Y-m-d'),
+            'created_at' => now(),
+            'updated_at' => now(),
+            'is_virtual' => true
+        ];
+        
+        // Add to the beginning of expenses array
+        array_unshift($allExpenses, $detailedEngineeringExpense);
 
-            // Add to the beginning of expenses array
-            array_unshift($allExpenses, $detailedEngineeringExpense);
-        }
-
+        // Eager load the projectEngineer relationship
+        $project->load('projectEngineer');
+        
         return response()->json([
-            'project' => $project,
+            'project' => array_merge($project->toArray(), [
+                'project_engineer' => $project->projectEngineer
+            ]),
             'expenses' => $allExpenses,
+            'detailed_engineering_cost' => $detailedEngineeringCost,
             'summary' => [
                 'total_budget' => $project->budget,
                 'total_spent' => $project->totalSpentWithDetailedEngineering(),

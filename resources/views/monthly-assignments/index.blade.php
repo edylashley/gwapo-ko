@@ -141,6 +141,7 @@
                     $delayClass = 'card-delay-' . (($index % 3) + 1);
                 @endphp
                 <div class="glass-card p-6 project-card {{ $delayClass }}"
+                     data-project-id="{{ $project->id }}"
                      data-project-name="{{ strtolower($project->name) }}"
                      data-fpp-code="{{ strtolower($project->fpp_code ?? '') }}"
                      data-project-engineer="{{ strtolower($project->projectEngineer ? $project->projectEngineer->name : '') }}"
@@ -294,19 +295,56 @@
     </div>
 
 @if(auth()->user()->is_admin)
+    <!-- Add Engineer Modal -->
+    <div id="addEngineerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition" style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative animate-fadeInUp">
+            <button id="closeAddEngineerModal" class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-3xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                <span class="mr-2">👷</span> Add Engineer
+            </h2>
+            <form id="addEngineerForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Engineer Name</label>
+                    <input type="text" id="engineerName" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="engineerEmail" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all duration-200" required>
+                </div>
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="canBeProjectEngineer" class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-gray-600">Can be assigned as Project Engineer</span>
+                    </label>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelAddEngineer" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 border-2 border-green-700 shadow-lg hover:shadow-xl">
+                        Add Engineer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Team Management Modal (Admin Only) -->
     <div id="teamModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden transition" style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
         <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
             <button id="closeTeamModal" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl">&times;</button>
-            <h2 id="teamModalTitle" class="text-2xl font-bold mb-6 text-gray-800">Manage Monthly Team</h2>
+            <h2 id="teamModalTitle" class="text-2xl font-bold text-gray-800 mb-6">Manage Monthly Team</h2>
 
-        <!-- Current Team Display -->
-        <div id="currentTeam" class="mb-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-3">Current Team</h3>
-            <div id="teamList" class="space-y-2 mb-4">
-                <!-- Team members will be loaded here -->
+            <!-- Current Team Display -->
+            <div id="currentTeam" class="mb-6">
+                
+                <!-- Add New Button in lower-left corner -->
+                <div class="flex">
+                    <button id="addNewEngineerBtn" class="bg-green-400 hover:bg-teal-800 text-black px-6 py-2 rounded-lg font-semibold transition-all duration-300 border border-teal-600 hover:shadow-lg hover:shadow-teal-500/50 hover:scale-105 hover:-translate-y-1 transform flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Add New
+                    </button>
+                </div>
             </div>
-        </div>
 
         <!-- Add Engineer Form -->
         <div class="border-t pt-6">
@@ -363,6 +401,88 @@ function closeTeamModal() {
     document.getElementById('newEngineerSelect').value = '';
     document.getElementById('isTeamHeadCheckbox').checked = false;
 }
+
+// Add event listeners for the Add Engineer modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Add New button in team modal
+    const addNewEngineerBtn = document.getElementById('addNewEngineerBtn');
+    const closeAddEngineerModal = document.getElementById('closeAddEngineerModal');
+    const cancelAddEngineer = document.getElementById('cancelAddEngineer');
+    const addEngineerForm = document.getElementById('addEngineerForm');
+    
+    // Open Add Engineer modal from team modal
+    if (addNewEngineerBtn) {
+        addNewEngineerBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeTeamModal();
+            
+            // Small delay to ensure the team modal is fully closed
+            setTimeout(() => {
+                document.getElementById('addEngineerModal').classList.remove('hidden');
+            }, 100);
+        });
+    }
+    
+    // Close modal functions
+    function closeAddEngineerModalFunc() {
+        document.getElementById('addEngineerModal').classList.add('hidden');
+    }
+    
+    // Close modal buttons
+    if (closeAddEngineerModal) {
+        closeAddEngineerModal.addEventListener('click', closeAddEngineerModalFunc);
+    }
+    
+    if (cancelAddEngineer) {
+        cancelAddEngineer.addEventListener('click', closeAddEngineerModalFunc);
+    }
+    
+    // Handle form submission
+    if (addEngineerForm) {
+        addEngineerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('engineerName').value;
+            const email = document.getElementById('engineerEmail').value;
+            const canBeProjectEngineer = document.getElementById('canBeProjectEngineer').checked;
+            
+            // Send data to server
+            fetch('{{ route('engineers.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    can_be_project_engineer: canBeProjectEngineer
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close the modal and reset form
+                    closeAddEngineerModalFunc();
+                    addEngineerForm.reset();
+                    
+                    // Show success message
+                    alert('Engineer added successfully!');
+                    
+                    // Reload the page to show the new engineer
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to add engineer');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the engineer');
+            });
+        });
+    }
+});
 
 function loadCurrentTeam() {
     // This will be populated by the page data, but we can also fetch fresh data
@@ -599,7 +719,7 @@ function showMessage(message, type) {
                 document.body.removeChild(messageDiv);
             }
         }, 300);
-    }, 3000);
+    }, 1000);
 }
 
 // Smooth client-side search functionality
@@ -696,40 +816,92 @@ function hideNoResultsMessage() {
 
 // Apply engineer salary
 function applySalary(projectId, engineerId, year, month, engineerName) {
+    console.log('applySalary called with:', { projectId, engineerId, year, month, engineerName });
+    
     const salaryInput = document.getElementById(`salary_${projectId}_${engineerId}_${year}_${month}`);
-    const salary = salaryInput.value;
-
-    if (salary === '' || salary === null || parseFloat(salary) < 0) {
-        alert('Please enter a valid salary amount.');
+    if (!salaryInput) {
+        console.error('Salary input not found with ID:', `salary_${projectId}_${engineerId}_${year}_${month}`);
         return;
     }
-
-    fetch('{{ route("monthly-assignments.update-salary") }}', {
+    
+    const salary = salaryInput.value.trim();
+    const applyBtn = document.getElementById(`apply_salary_${projectId}_${engineerId}_${year}_${month}`);
+    
+    if (!applyBtn) {
+        console.error('Apply button not found with ID:', `apply_salary_${projectId}_${engineerId}_${year}_${month}`);
+        return;
+    }
+    
+    // Save original button content
+    const originalBtnContent = applyBtn.innerHTML;
+    
+    // Validate salary input
+    if (salary === '' || isNaN(salary) || parseFloat(salary) < 0) {
+        showMessage('Please enter a valid salary amount.', 'error');
+        return;
+    }
+    
+    // Disable button and show loading state
+    applyBtn.disabled = true;
+    applyBtn.innerHTML = '<span class="animate-spin">⏳</span> Saving...';
+    
+    // Prepare the request data
+    const requestData = {
+        project_id: projectId,
+        engineer_id: engineerId,
+        year: year,
+        month: month,
+        salary: parseFloat(salary),
+        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    };
+    
+    console.log('Sending salary update request:', requestData);
+    
+    // Make the API request with JSON data
+    fetch('/monthly-assignments/update-salary', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({
-            project_id: projectId,
-            engineer_id: engineerId,
-            year: year,
-            month: month,
-            salary: parseFloat(salary)
-        })
+        body: JSON.stringify(requestData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        const responseData = await response.json().catch(() => ({}));
+        console.log('Raw salary update response:', { status: response.status, statusText: response.statusText, data: responseData });
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+        
+        if (!responseData.success) {
+            throw new Error(responseData.message || 'Failed to update salary');
+        }
+        
+        return responseData;
+    })
     .then(data => {
-        if (data.success) {
-            // Show success modal
-            showSuccessModal(`Salary of ₱${parseFloat(salary).toLocaleString()} applied for ${engineerName}`);
-        } else {
-            alert(data.message || 'Error updating salary');
+        console.log('Salary update successful:', data);
+        // Show success message
+        showMessage(`Successfully updated salary for ${engineerName} to ₱${parseFloat(salary).toLocaleString()}`, 'success');
+        // Update the displayed salary in the UI if needed
+        const salaryDisplay = document.querySelector(`#salary_display_${projectId}_${engineerId}_${year}_${month}`);
+        if (salaryDisplay) {
+            salaryDisplay.textContent = `₱${parseFloat(salary).toLocaleString()}`;
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating salary');
+        console.error('Error updating salary:', error);
+        const errorMessage = error.message || 'Error updating salary. Please check the console for more details.';
+        console.error('Full error details:', { error, message: error.message, stack: error.stack });
+        showMessage(errorMessage, 'error');
+    })
+    .finally(() => {
+        // Re-enable button and restore original content
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = originalBtnContent;
     });
 }
 
@@ -792,6 +964,49 @@ function closeSuccessModal() {
             behavior: 'smooth'
         });
     }
+
+    // Function to highlight and scroll to a specific project card
+    function highlightProjectCard(projectId) {
+        if (!projectId) return;
+        
+        const projectCard = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
+        
+        if (projectCard) {
+            // Add highlight class
+            projectCard.classList.add('ring-4', 'ring-blue-500', 'ring-offset-2', 'ring-offset-green-800');
+            
+            // Scroll to the project card with offset for the header
+            const headerOffset = 100;
+            const elementPosition = projectCard.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+            
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+                projectCard.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-2', 'ring-offset-green-800');
+                
+                // Remove the highlight_project parameter from URL without page reload
+                const url = new URL(window.location);
+                url.searchParams.delete('highlight_project');
+                window.history.replaceState({}, '', url);
+            }, 3000);
+        }
+    }
+    
+    // Check for highlight_project parameter on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('highlight_project');
+        
+        // Small delay to ensure all content is loaded
+        if (projectId) {
+            setTimeout(() => highlightProjectCard(projectId), 500);
+        }
+    });
     </script>
 </body>
 </html>

@@ -17,6 +17,7 @@ class MonthlyAssignment extends Model
         'month',
         'assigned_at',
         'is_team_head',
+        'is_active',
         'salary',
     ];
 

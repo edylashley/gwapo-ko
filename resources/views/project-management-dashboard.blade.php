@@ -179,7 +179,7 @@
         <!-- Quick Budget Overview -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
             <!-- Active Projects Budget Status -->
-            <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg glass-card card-delay-1" style="height: 1151px;">
+            <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg glass-card card-delay-1" style="height: 600px;">
                 <div class="p-6 h-full flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-bold text-white">Active Projects Budget Status</h2>
@@ -207,29 +207,37 @@
             <!-- Right Column: Quick Actions + Engineers -->
             <div class="flex flex-col gap-4">
                 <!-- Quick Actions -->
-                <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg p-6 glass-card card-delay-2">
-                    <h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
-                    <div class="space-y-3">
-                        <a href="/projects" class="main-action-btn block w-full bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-center border border-emerald-600 hover:shadow-lg hover:shadow-emerald-500/50 hover:scale-105 hover:-translate-y-1 transform">
-                            @if(auth()->user()->is_admin)
-                                Manage Projects
-                            @else
-                                View Projects
-                            @endif
-                        </a>
-                        <a href="/projects/archive" class="main-action-btn block w-full bg-slate-700 hover:bg-slate-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 text-center border border-slate-600 hover:shadow-lg hover:shadow-slate-500/50 hover:scale-105 hover:-translate-y-1 transform">
-                            View Archive
-                        </a>
-                        @if(auth()->user()->is_admin)
-                            <button id="addEngineerBtn" class="main-action-btn w-full bg-teal-700 hover:bg-teal-800 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-300 border border-teal-600 hover:shadow-lg hover:shadow-teal-500/50 hover:scale-105 hover:-translate-y-1 transform">
-                                Add Engineer
-                            </button>
-                        @endif
-                    </div>
-                </div>
+                <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg p-6 glass-card card-delay-2" style="height: 150px;">
+    <h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
+    <div class="flex space-x-3">
+    <a href="/projects" 
+       class="main-action-btn flex-1 h-12 flex items-center justify-center bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-semibold transition-all duration-300 border border-emerald-600 hover:shadow-lg hover:shadow-emerald-500/50 hover:scale-105 hover:-translate-y-1">
+        @if(auth()->user()->is_admin)
+            Manage Projects
+        @else
+            View Projects
+        @endif
+    </a>
+
+    <a href="/projects/archive" 
+       class="main-action-btn flex-1 h-12 flex items-center justify-center bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-semibold transition-all duration-300 border border-slate-600 hover:shadow-lg hover:shadow-slate-500/50 hover:scale-105 hover:-translate-y-1">
+        View Archive
+    </a>
+
+    @if(auth()->user()->is_admin)
+        <button id="addEngineerBtn" 
+                class="main-action-btn flex-1 h-12 flex items-center justify-center bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-semibold transition-all duration-300 border border-teal-600 hover:shadow-lg hover:shadow-teal-500/50 hover:scale-105 hover:-translate-y-1">
+            Add Engineer
+        </button>
+    @endif
+</div>
+
+</div>
+
+
 
                 <!-- Engineers List -->
-                <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg glass-card card-delay-3" style="height: 867px;">
+                <div class="bg-white bg-opacity-20 rounded-2xl shadow-lg glass-card card-delay-3" style="height: 435px;">
                     <div class="p-6 h-full flex flex-col">
                         <div class="flex items-center justify-between mb-4">
                             <h2 class="text-xl font-bold text-white">Engineers</h2>
@@ -675,8 +683,8 @@
                             <div class="text-right">
                                 <div class="flex flex-col space-y-1">
                                     ${engineer.can_be_project_engineer ?
-                                        '<div class="text-xs bg-green-300 text-green-700 px-2 py-1 rounded-full">Project Engineer</div>' :
-                                        '<div class="text-xs bg-gray-300 text-gray-500 px-2 py-1 rounded-full">Team Member</div>'
+                                        '<div class="text-xs bg-green-300 text-green-800 px-2 py-1 rounded-full">Project Engineer</div>' :
+                                        '<div class="text-xs bg-gray-400 text-gray-800 px-2 py-1 rounded-full">Team Member</div>'
                                     }
                                     ${engineer.can_be_monthly_engineer ?
                                         '<div class="text-xs bg-blue-300 text-blue-700 px-2 py-1 rounded-full">Monthly Work</div>' :

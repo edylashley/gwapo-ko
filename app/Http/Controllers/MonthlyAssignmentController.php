@@ -225,7 +225,7 @@ class MonthlyAssignmentController extends Controller
             'engineer_id' => 'required|exists:engineers,id',
             'year' => 'required|integer',
             'month' => 'required|integer|min:1|max:12',
-            'salary' => 'required|numeric|min:0',
+            'salary' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -266,11 +266,11 @@ class MonthlyAssignmentController extends Controller
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'project_engineer_id' => 'required|exists:engineers,id',
-            'team_members' => 'required|array|min:1',
+            'team_members' => 'sometimes|array',
             'team_members.*' => 'exists:engineers,id',
-            'team_head' => 'required|exists:engineers,id',
-            'individual_salaries' => 'required|array',
-            'individual_salaries.*' => 'required|numeric|min:0',
+            'team_head' => 'nullable|exists:engineers,id',
+            'individual_salaries' => 'sometimes|array',
+            'individual_salaries.*' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -281,43 +281,77 @@ class MonthlyAssignmentController extends Controller
             $project = Project::find($request->project_id);
             $project->update(['project_engineer_id' => $request->project_engineer_id]);
 
-            // Calculate total salary from individual salaries
-            $individualSalaries = $request->individual_salaries;
+            // Initialize variables
             $totalSalary = 0;
+            $processedEngineers = [];
+            $teamMembers = $request->input('team_members', []);
+            $individualSalaries = $request->input('individual_salaries', []);
+            $teamHeadId = $request->input('team_head');
             
-            foreach ($request->team_members as $engineerId) {
-                if (isset($individualSalaries[$engineerId])) {
-                    $totalSalary += floatval($individualSalaries[$engineerId]);
-                }
-            }
-
-            // Create monthly assignments for all team members with individual salaries
-            foreach ($request->team_members as $engineerId) {
-                $isTeamHead = ($engineerId == $request->team_head);
-                $individualSalary = floatval($individualSalaries[$engineerId] ?? 0);
+            // Process team head if specified
+            if ($teamHeadId) {
+                $salary = floatval($individualSalaries[$teamHeadId] ?? 0);
+                $totalSalary += $salary;
                 
                 MonthlyAssignment::updateOrCreate(
                     [
                         'project_id' => $request->project_id,
-                        'engineer_id' => $engineerId,
+                        'engineer_id' => $teamHeadId,
                         'year' => $currentYear,
                         'month' => $currentMonth,
                     ],
                     [
-                        'is_team_head' => $isTeamHead,
-                        'salary' => $individualSalary,
+                        'is_team_head' => true,
+                        'salary' => $salary,
                         'assigned_at' => now(),
                     ]
                 );
+                $processedEngineers[] = $teamHeadId;
+            }
+            
+            // Process other team members
+            if (is_array($teamMembers)) {
+                foreach ($teamMembers as $engineerId) {
+                    // Skip if already processed as team head
+                    if (in_array($engineerId, $processedEngineers)) {
+                        continue;
+                    }
+                    
+                    $salary = floatval($individualSalaries[$engineerId] ?? 0);
+                    $totalSalary += $salary;
+                    $isTeamHead = ($engineerId == $teamHeadId);
+                    
+                    MonthlyAssignment::updateOrCreate(
+                        [
+                            'project_id' => $request->project_id,
+                            'engineer_id' => $engineerId,
+                            'year' => $currentYear,
+                            'month' => $currentMonth,
+                        ],
+                        [
+                            'is_team_head' => $isTeamHead,
+                            'salary' => $salary,
+                            'assigned_at' => now(),
+                        ]
+                    );
+                    
+                    $processedEngineers[] = $engineerId;
+                }
             }
 
-            // Create expense record for Detailed Engineering (sixth expense)
-            \App\Models\Expense::create([
-                'project_id' => $request->project_id,
-                'description' => 'Detailed Engineering',
-                'amount' => $totalSalary,
-                'date' => now(),
-            ]);
+            // Only create expense if there are salaries
+            if ($totalSalary > 0) {
+                \App\Models\Expense::updateOrCreate(
+                    [
+                        'project_id' => $request->project_id,
+                        'description' => 'Detailed Engineering'
+                    ],
+                    [
+                        'amount' => $totalSalary,
+                        'date' => now(),
+                    ]
+                );
+            }
 
             return response()->json([
                 'success' => true,
